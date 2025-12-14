@@ -1,0 +1,59 @@
+.student-avatar-list {
+    display: flex;
+    align-items: center;
+    margin-top: 24px;
+}
+
+.avatar-group {
+    display: flex;
+    align-items: center;
+}
+
+.student-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid white;
+    object-fit: cover;
+    margin-left: -12px;
+    transition: transform 0.2s, z-index 0.2s;
+    position: relative;
+}
+
+.student-avatar:first-child {
+    margin-left: 0;
+}
+
+.student-avatar:hover {
+    transform: translateY(-4px);
+    z-index: 10;
+}
+
+.more-students {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #f0f2f5;
+    color: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
+    border: 2px solid white;
+    margin-left: -12px;
+    position: relative;
+    z-index: 5;
+}
+
+.students-label {
+    margin-left: 12px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 500;
+}
+
+.students-label span {
+    font-weight: 700;
+    color: white;
+}

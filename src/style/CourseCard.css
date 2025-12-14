@@ -1,0 +1,171 @@
+.course-card {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition: transform 0.3s, box-shadow 0.3s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.course-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  text-decoration: none;
+  color: inherit;
+}
+
+.course-card-image {
+  width: 100%;
+  height: 200px;
+  position: relative;
+  overflow: hidden;
+}
+
+.course-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.course-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 60px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Gradient backgrounds for Pro courses */
+.course-card.gradient-blue .course-card-image {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.course-card.gradient-yellow .course-card-image {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.course-card.gradient-pink .course-card-image {
+  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+.course-card.gradient-green .course-card-image {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.course-card.gradient-purple .course-card-image {
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+}
+
+.course-card-content {
+  padding: 20px;
+}
+
+.course-card-header {
+  margin-bottom: 16px;
+}
+
+.course-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 8px 0;
+  line-height: 1.4;
+}
+
+.course-subtitle {
+  font-size: 14px;
+  color: #666;
+  display: block;
+}
+
+.course-rating {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.course-rating .rating-stars {
+  display: flex;
+  gap: 2px;
+}
+
+.course-rating .rating-stars i {
+  font-size: 14px;
+  color: #ffa500;
+}
+
+.course-rating .rating-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.course-rating .rating-count {
+  font-size: 13px;
+  color: #666;
+}
+
+
+.course-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.course-price {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.course-price .price-original {
+  font-size: 14px;
+  color: #6c757d !important;
+  text-decoration: line-through;
+}
+
+.price-current {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ff6b6b;
+}
+
+.course-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: #666;
+}
+
+.course-instructor {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.course-instructor i {
+  font-size: 16px;
+}
+
+.course-stats {
+  display: flex;
+  gap: 12px;
+}
+
+.course-stats span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.course-stats i {
+  font-size: 14px;
+}

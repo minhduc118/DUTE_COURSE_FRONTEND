@@ -1,0 +1,114 @@
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  background: #ffffff;
+  transition: width 0.3s ease;
+  z-index: 1000;
+  overflow-x: hidden;
+  overflow-y: auto;
+  border-right: 1px solid #e5e7eb;
+}
+
+.sidebar.expanded {
+  width: 260px;
+}
+
+.sidebar.collapsed {
+  width: 80px;
+}
+
+.main-content {
+  transition: margin-left 0.3s ease;
+}
+
+.main-content.expanded {
+  margin-left: 260px;
+}
+
+.main-content.collapsed {
+  margin-left: 80px;
+}
+
+.nav-link {
+  color: #4b5563;
+  transition: all 0.2s;
+  border-radius: 8px;
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.nav-link:hover {
+  background: #eff6ff;
+  color: #3b82f6;
+}
+
+.nav-link.active {
+  background: #eff6ff;
+  color: #3b82f6;
+}
+
+.nav-link i {
+  min-width: 24px;
+}
+
+.sidebar-header {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.user-profile {
+  border-top: 1px solid #e5e7eb;
+}
+
+.top-navbar {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.notification-badge {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 8px;
+  height: 8px;
+  background: #dc3545;
+  border-radius: 50%;
+}
+
+.profile-avatar {
+  width: 35px;
+  height: 35px;
+  border-radius: 8px;
+  background: #3b82f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.sidebar-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #3b82f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.sidebar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 4px;
+}
+
