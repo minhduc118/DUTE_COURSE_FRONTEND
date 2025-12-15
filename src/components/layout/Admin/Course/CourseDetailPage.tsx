@@ -1,9 +1,11 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-import { LessonModel, SectionModel } from "../../../../model/CourseModel";
+import { LessonModel, SectionModel, LessonType } from "../../../../model/CourseModel";
 
 import { useCourseDetail } from "../../../../hooks/useCourseDetail";
+import QuizBuilderModal from "./QuizBuilderModal";
+import CodingBuilderModal from "./CodingBuilderModal";
 
 interface SectionFormState {
   title: string;
@@ -15,7 +17,9 @@ interface LessonFormState {
   title: string;
   sectionId: number;
   lessonOrder: string;
+  lessonType: LessonType;
   youtubeUrl: string;
+  readingContent: string;
   durationSeconds: string;
   isPreview: boolean;
 }
@@ -30,7 +34,9 @@ const defaultLessonForm: LessonFormState = {
   title: "",
   sectionId: 0,
   lessonOrder: "",
+  lessonType: LessonType.VIDEO,
   youtubeUrl: "",
+  readingContent: "",
   durationSeconds: "",
   isPreview: false,
 };
@@ -72,6 +78,11 @@ export default function CourseDetailPage() {
   const [lessonToDelete, setLessonToDelete] = useState<LessonModel | null>(
     null
   );
+
+  // Builder Modal States
+  const [showQuizBuilder, setShowQuizBuilder] = useState(false);
+  const [showCodingBuilder, setShowCodingBuilder] = useState(false);
+  const [currentLessonForBuilder, setCurrentLessonForBuilder] = useState<LessonModel | null>(null);
 
   const sortedSections = useMemo(() => {
     if (!course?.sections) return [];
@@ -123,7 +134,9 @@ export default function CourseDetailPage() {
       title: "",
       sectionId: section.sectionId,
       lessonOrder: `${(section.lessons?.length || 0) + 1}`,
+      lessonType: LessonType.VIDEO,
       youtubeUrl: "",
+      readingContent: "",
       durationSeconds: "",
       isPreview: false,
     });
@@ -137,7 +150,9 @@ export default function CourseDetailPage() {
       title: lesson.title || "",
       sectionId: section.sectionId,
       lessonOrder: lesson.lessonOrder?.toString() || "",
+      lessonType: lesson.lessonType || LessonType.VIDEO,
       youtubeUrl: lesson.youtubeUrl || "",
+      readingContent: lesson.readingContent || "",
       durationSeconds: lesson.durationSeconds?.toString() || "",
       isPreview: Boolean(lesson.isPreview),
     });
@@ -147,18 +162,27 @@ export default function CourseDetailPage() {
 
   const handleLessonFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (
-      !lessonForm.title.trim() ||
-      !lessonForm.lessonOrder ||
-      !lessonForm.youtubeUrl.trim()
-    ) {
+    if (!lessonForm.title.trim() || !lessonForm.lessonOrder) {
       return;
     }
+
+    // Validate required fields based on Type
+    if (lessonForm.lessonType === LessonType.VIDEO && !lessonForm.youtubeUrl.trim()) {
+      alert("Video URL is required for Video lessons.");
+      return;
+    }
+    if (lessonForm.lessonType === LessonType.READING && !lessonForm.readingContent.trim()) {
+      alert("Content is required for Reading lessons.");
+      return;
+    }
+
     const payload = {
       title: lessonForm.title.trim(),
       sectionId: currentSectionForLesson?.sectionId || 0,
       lessonOrder: Number(lessonForm.lessonOrder),
-      youtubeUrl: lessonForm.youtubeUrl.trim(),
+      lessonType: lessonForm.lessonType,
+      youtubeUrl: lessonForm.lessonType === LessonType.VIDEO ? lessonForm.youtubeUrl.trim() : undefined,
+      readingContent: lessonForm.lessonType === LessonType.READING ? lessonForm.readingContent.trim() : undefined,
       durationSeconds: lessonForm.durationSeconds
         ? Number(lessonForm.durationSeconds)
         : undefined,
@@ -178,11 +202,30 @@ export default function CourseDetailPage() {
     setLessonForm(defaultLessonForm);
   };
 
+  const openBuilder = (lesson: LessonModel) => {
+    setCurrentLessonForBuilder(lesson);
+    if (lesson.lessonType === LessonType.QUIZ) {
+      setShowQuizBuilder(true);
+    } else if (lesson.lessonType === LessonType.CODING) {
+      setShowCodingBuilder(true);
+    }
+  };
+
   const renderLessonBadge = (lesson: LessonModel) => {
     if (lesson.isPreview) {
       return <span className="badge bg-info text-dark ms-2">Preview</span>;
     }
     return null;
+  };
+
+  const renderLessonTypeIcon = (type: LessonType) => {
+    switch (type) {
+      case LessonType.VIDEO: return <i className="bi bi-play-circle text-primary" title="Video"></i>;
+      case LessonType.READING: return <i className="bi bi-book text-info" title="Reading"></i>;
+      case LessonType.QUIZ: return <i className="bi bi-puzzle text-warning" title="Quiz"></i>;
+      case LessonType.CODING: return <i className="bi bi-code-square text-success" title="Coding"></i>;
+      default: return <i className="bi bi-question-circle"></i>;
+    }
   };
 
   if (loading && !course) {
@@ -353,10 +396,11 @@ export default function CourseDetailPage() {
                     <thead className="table-light">
                       <tr>
                         <th style={{ width: "60px" }}>Order</th>
+                        <th style={{ width: "50px" }}>Type</th>
                         <th>Title</th>
-                        <th>Youtube URL</th>
-                        <th style={{ width: "120px" }}>Duration</th>
-                        <th style={{ width: "150px" }}>Actions</th>
+                        <th>Content/URL</th>
+                        <th style={{ width: "100px" }}>Duration</th>
+                        <th style={{ width: "200px" }}>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -367,18 +411,23 @@ export default function CourseDetailPage() {
                               #{lesson.lessonOrder}
                             </span>
                           </td>
+                          <td className="text-center fs-5">
+                            {renderLessonTypeIcon(lesson.lessonType)}
+                          </td>
                           <td>
                             {lesson.title}
                             {renderLessonBadge(lesson)}
                           </td>
                           <td>
-                            <a
-                              href={lesson.youtubeUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                            >
-                              {lesson.youtubeUrl}
-                            </a>
+                            {lesson.lessonType === LessonType.VIDEO ? (
+                              <a href={lesson.youtubeUrl} target="_blank" rel="noreferrer" className="text-truncate d-inline-block" style={{ maxWidth: '200px' }}>
+                                {lesson.youtubeUrl}
+                              </a>
+                            ) : lesson.lessonType === LessonType.READING ? (
+                              <span className="text-muted fst-italic">Text Content</span>
+                            ) : (
+                              <span className="text-muted small">Configured via Builder</span>
+                            )}
                           </td>
                           <td>
                             {lesson.durationSeconds
@@ -387,17 +436,28 @@ export default function CourseDetailPage() {
                           </td>
                           <td>
                             <div className="d-flex gap-2">
+                              {(lesson.lessonType === LessonType.QUIZ || lesson.lessonType === LessonType.CODING) && (
+                                <button
+                                  className="btn btn-sm btn-outline-warning"
+                                  onClick={() => openBuilder(lesson)}
+                                  title="Configure Content"
+                                >
+                                  <i className="bi bi-gear-fill" />
+                                </button>
+                              )}
                               <button
                                 className="btn btn-sm btn-outline-primary"
                                 onClick={() =>
                                   openEditLessonModal(section, lesson)
                                 }
+                                title="Edit Metadata"
                               >
                                 <i className="bi bi-pencil" />
                               </button>
                               <button
                                 className="btn btn-sm btn-outline-danger"
                                 onClick={() => setLessonToDelete(lesson)}
+                                title="Delete Lesson"
                               >
                                 <i className="bi bi-trash" />
                               </button>
@@ -516,6 +576,25 @@ export default function CourseDetailPage() {
               <form onSubmit={handleLessonFormSubmit}>
                 <div className="modal-body">
                   <div className="mb-3">
+                    <label className="form-label">Lesson Type *</label>
+                    <select
+                      className="form-select"
+                      value={lessonForm.lessonType}
+                      onChange={(e) =>
+                        setLessonForm({
+                          ...lessonForm,
+                          lessonType: e.target.value as LessonType,
+                        })
+                      }
+                      required
+                    >
+                      <option value={LessonType.VIDEO}>Video</option>
+                      <option value={LessonType.READING}>Reading</option>
+                      <option value={LessonType.QUIZ}>Quiz</option>
+                      <option value={LessonType.CODING}>Coding</option>
+                    </select>
+                  </div>
+                  <div className="mb-3">
                     <label className="form-label">Title *</label>
                     <input
                       type="text"
@@ -543,36 +622,62 @@ export default function CourseDetailPage() {
                       required
                     />
                   </div>
-                  <div className="mb-3">
-                    <label className="form-label">Youtube URL *</label>
-                    <input
-                      type="url"
-                      className="form-control"
-                      value={lessonForm.youtubeUrl}
-                      onChange={(e) =>
-                        setLessonForm({
-                          ...lessonForm,
-                          youtubeUrl: e.target.value,
-                        })
-                      }
-                      required
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">Duration (seconds)</label>
-                    <input
-                      type="number"
-                      min={0}
-                      className="form-control"
-                      value={lessonForm.durationSeconds}
-                      onChange={(e) =>
-                        setLessonForm({
-                          ...lessonForm,
-                          durationSeconds: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
+
+                  {/* Conditional Fields based on Lesson Type */}
+                  {lessonForm.lessonType === LessonType.VIDEO && (
+                    <div className="mb-3">
+                      <label className="form-label">Youtube URL *</label>
+                      <input
+                        type="url"
+                        className="form-control"
+                        value={lessonForm.youtubeUrl}
+                        onChange={(e) =>
+                          setLessonForm({
+                            ...lessonForm,
+                            youtubeUrl: e.target.value,
+                          })
+                        }
+                        required
+                      />
+                    </div>
+                  )}
+
+                  {lessonForm.lessonType === LessonType.READING && (
+                    <div className="mb-3">
+                      <label className="form-label">Reading Content *</label>
+                      <textarea
+                        className="form-control"
+                        rows={6}
+                        value={lessonForm.readingContent}
+                        onChange={(e) =>
+                          setLessonForm({
+                            ...lessonForm,
+                            readingContent: e.target.value,
+                          })
+                        }
+                        required
+                      />
+                    </div>
+                  )}
+
+                  {(lessonForm.lessonType === LessonType.VIDEO || lessonForm.lessonType === LessonType.READING) && (
+                    <div className="mb-3">
+                      <label className="form-label">Duration (seconds)</label>
+                      <input
+                        type="number"
+                        min={0}
+                        className="form-control"
+                        value={lessonForm.durationSeconds}
+                        onChange={(e) =>
+                          setLessonForm({
+                            ...lessonForm,
+                            durationSeconds: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                  )}
+
                   <div className="form-check form-switch">
                     <input
                       className="form-check-input"
@@ -717,6 +822,34 @@ export default function CourseDetailPage() {
             </div>
           </div>
         </div>
+      )}
+      {/* Quiz Builder Modal */}
+      {showQuizBuilder && currentLessonForBuilder && (
+        <QuizBuilderModal
+          lesson={currentLessonForBuilder}
+          onClose={() => {
+            setShowQuizBuilder(false);
+            setCurrentLessonForBuilder(null);
+          }}
+          onSuccess={() => {
+            // Optionally refresh course data or show success message
+            alert("Quiz saved successfully!");
+          }}
+        />
+      )}
+
+      {/* Coding Builder Modal */}
+      {showCodingBuilder && currentLessonForBuilder && (
+        <CodingBuilderModal
+          lesson={currentLessonForBuilder}
+          onClose={() => {
+            setShowCodingBuilder(false);
+            setCurrentLessonForBuilder(null);
+          }}
+          onSuccess={() => {
+            alert("Coding exercise saved successfully!");
+          }}
+        />
       )}
     </div>
   );

@@ -1,3 +1,10 @@
+export enum LessonType {
+  VIDEO = 'VIDEO',
+  READING = 'READING',
+  QUIZ = 'QUIZ',
+  CODING = 'CODING'
+}
+
 export class CourseModel {
   courseId!: number;
   title!: string;
@@ -16,6 +23,13 @@ export class CourseModel {
   numberLessons?: number;
   durationSeconds?: number;
   durationInMonths?: number;
+
+  // New Metadata
+  videoLessonCount?: number;
+  readingLessonCount?: number;
+  quizLessonCount?: number;
+  codingLessonCount?: number;
+  progressPercentage?: number;
 
   constructor(init?: Partial<CourseModel>) {
     Object.assign(this, init);
@@ -41,13 +55,51 @@ export class LessonModel {
   section?: SectionModel;
   title!: string;
   lessonOrder!: number;
-  youtubeUrl!: string;
+  lessonType!: LessonType;
   durationSeconds?: number;
   courseId?: number;
   isPreview!: boolean;
   isLocked!: boolean;
 
+  // Conditional fields
+  youtubeUrl?: string;     // Only for VIDEO
+  readingContent?: string; // Only for READING
+
   constructor(init?: Partial<LessonModel>) {
     Object.assign(this, init);
   }
+}
+
+// --- Quiz Interfaces ---
+export interface OptionRequest {
+  content: string;
+  isCorrect: boolean;
+}
+
+export interface QuestionRequest {
+  content: string;
+  options: OptionRequest[];
+}
+
+export interface QuizRequest {
+  title: string;
+  questions: QuestionRequest[];
+  timeLimitSeconds: number;
+  passingScore: number;
+  maxAttempts: number;
+}
+
+// --- Coding Interfaces ---
+export interface TestCaseRequest {
+  input: string;
+  expectedOutput: string;
+  isHidden: boolean;
+}
+
+export interface CodingExerciseRequest {
+  title: string;
+  problemStatement: string;
+  language: string;
+  starterCode: string;
+  testCases: TestCaseRequest[];
 }

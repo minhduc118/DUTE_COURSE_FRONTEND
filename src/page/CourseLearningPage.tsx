@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { CourseModel, SectionModel, LessonModel } from "../model/CourseModel";
+import { CourseModel, SectionModel, LessonModel, LessonType } from "../model/CourseModel";
 import { getCourseDetail } from "../api/CourseAPI";
 import "../style/CourseLearningPage.css";
 
@@ -240,44 +240,78 @@ export default function CourseLearningPage() {
 
       <div className="learning-content-wrapper">
         {/* Main Content - Video Player */}
+        {/* Main Content */}
         <div className="main-content">
           {currentLesson ? (
             <>
-              {/* Video Banner */}
-              <div className={`video-banner ${currentLesson.youtubeUrl ? "has-video" : ""}`}>
-                {currentLesson.youtubeUrl ? (
-                  <div className="video-iframe-container">
-                    <iframe
-                      src={getYouTubeEmbedUrl(currentLesson.youtubeUrl)}
-                      title={currentLesson.title}
-                      frameBorder="0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                      className="video-iframe"
-                    ></iframe>
+              {/* Content Switch based on LessonType */}
+              {currentLesson.lessonType === LessonType.VIDEO || !currentLesson.lessonType ? (
+                // VIDEO PLAYER (Existing Logic)
+                <>
+                  <div className={`video-banner ${currentLesson.youtubeUrl ? "has-video" : ""}`}>
+                    {currentLesson.youtubeUrl ? (
+                      <div className="video-iframe-container">
+                        <iframe
+                          src={getYouTubeEmbedUrl(currentLesson.youtubeUrl)}
+                          title={currentLesson.title}
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          className="video-iframe"
+                        ></iframe>
+                      </div>
+                    ) : (
+                      <div className="video-banner-content">
+                        <div className="banner-left">
+                          <h2 className="banner-title-white">{currentLesson.title}</h2>
+                        </div>
+                        <div className="banner-center">
+                          <div className="play-button-large">
+                            <i className="bi bi-play-fill"></i>
+                          </div>
+                        </div>
+                        <div className="banner-right">
+                          <h2 className="banner-title-orange">
+                            {currentSection?.title || course.title}
+                          </h2>
+                          <p className="banner-subtitle">fullstack.edu.vn</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  <div className="video-banner-content">
-                    <div className="banner-left">
-                      <h2 className="banner-title-white">{currentLesson.title}</h2>
-                    </div>
-                    <div className="banner-center">
-                      <div className="play-button-large">
-                        <i className="bi bi-play-fill"></i>
+                </>
+              ) : currentLesson.lessonType === LessonType.READING ? (
+                // READING CONTENT
+                <div className="reading-content-container container py-4">
+                  <div className="card shadow-sm">
+                    <div className="card-body">
+                      <h2 className="mb-4">{currentLesson.title}</h2>
+                      <div className="reading-text" style={{ whiteSpace: 'pre-wrap' }}>
+                        {currentLesson.readingContent || "No content available."}
                       </div>
                     </div>
-                    <div className="banner-right">
-                      <h2 className="banner-title-orange">
-                        {currentSection?.title || course.title}
-                      </h2>
-                      <p className="banner-subtitle">fullstack.edu.vn</p>
-                    </div>
                   </div>
-                )}
-              </div>
+                </div>
+              ) : currentLesson.lessonType === LessonType.QUIZ ? (
+                // QUIZ PLACEHOLDER
+                <div className="d-flex flex-column align-items-center justify-content-center py-5">
+                  <i className="bi bi-puzzle display-1 text-primary mb-3"></i>
+                  <h3>Quiz Component</h3>
+                  <p className="text-muted">Coming soon...</p>
+                </div>
+              ) : currentLesson.lessonType === LessonType.CODING ? (
+                // CODING PLACEHOLDER
+                <div className="d-flex flex-column align-items-center justify-content-center py-5">
+                  <i className="bi bi-code-square display-1 text-success mb-3"></i>
+                  <h3>Coding Exercise</h3>
+                  <p className="text-muted">Coming soon...</p>
+                </div>
+              ) : null}
 
-              {/* Video Info */}
-              <div className="video-info">
+
+              {/* Video/Lesson Info (Common for Video, maybe others?) */}
+              {/* Only show "Update Info" if it's Video or generic? Let's show for all for consistency */}
+              <div className="video-info px-4 py-3">
                 <h3 className="video-info-title">{currentLesson.title}</h3>
                 <p className="video-info-date">
                   Cập nhật {new Date(course.updatedAt || course.createdAt).toLocaleDateString("vi-VN", {
@@ -287,10 +321,10 @@ export default function CourseLearningPage() {
                 </p>
               </div>
 
-              {/* Video Actions */}
-              <div className="video-actions">
+              {/* Actions (Notes, QA) */}
+              <div className="video-actions px-4">
                 <button className="btn-add-note">
-                  <i className="bi bi-plus-circle"></i> Thêm ghi chú tại 00:00
+                  <i className="bi bi-plus-circle"></i> Thêm ghi chú
                 </button>
                 <button className="btn-qa">
                   <i className="bi bi-chat-dots"></i> Hỏi đáp
@@ -298,7 +332,7 @@ export default function CourseLearningPage() {
               </div>
 
               {/* Navigation */}
-              <div className="lesson-navigation">
+              <div className="lesson-navigation px-4 pb-4">
                 {prevLesson ? (
                   <button
                     className="btn-nav prev"
@@ -391,10 +425,12 @@ export default function CourseLearningPage() {
                               <div className="lesson-item-left">
                                 {isCompleted ? (
                                   <i className="bi bi-check-circle-fill lesson-icon completed-icon"></i>
-                                ) : lesson.youtubeUrl ? (
-                                  <i className="bi bi-play-circle lesson-icon"></i>
                                 ) : (
-                                  <i className="bi bi-file-text lesson-icon"></i>
+                                  <i className={`bi lesson-icon ${lesson.lessonType === LessonType.READING ? 'bi-book' :
+                                    lesson.lessonType === LessonType.QUIZ ? 'bi-puzzle' :
+                                      lesson.lessonType === LessonType.CODING ? 'bi-code-square' :
+                                        'bi-play-circle'
+                                    }`}></i>
                                 )}
                                 <span className="lesson-name">{lesson.title}</span>
                                 {isPreview && (
