@@ -58,6 +58,7 @@ export class LessonModel {
   lessonType!: LessonType;
   durationSeconds?: number;
   courseId?: number;
+  quizId?: number;
   isPreview!: boolean;
   isLocked!: boolean;
 
@@ -71,22 +72,28 @@ export class LessonModel {
 }
 
 // --- Quiz Interfaces ---
-export interface OptionRequest {
-  content: string;
+export interface QuizOptionRequest {
+  optionId?: number;
+  optionText: string;
+  optionOrder: number;
   isCorrect: boolean;
 }
 
-export interface QuestionRequest {
-  content: string;
-  options: OptionRequest[];
+export interface QuizQuestionRequest {
+  questionId?: number;
+  questionText: string;
+  questionOrder: number;
+  points?: number;
+  options: QuizOptionRequest[];
 }
 
 export interface QuizRequest {
+  quizId?: number;
   title: string;
-  questions: QuestionRequest[];
-  timeLimitSeconds: number;
-  passingScore: number;
-  maxAttempts: number;
+  timeLimitSeconds?: number;
+  passingScore?: number;
+  maxAttempts?: number;
+  questions: QuizQuestionRequest[];
 }
 
 // --- Coding Interfaces ---
@@ -94,12 +101,19 @@ export interface TestCaseRequest {
   input: string;
   expectedOutput: string;
   isHidden: boolean;
+  testOrder: number;
 }
 
 export interface CodingExerciseRequest {
   title: string;
   problemStatement: string;
+  instructions?: string;
+  timeLimitSeconds?: number;
   language: string;
   starterCode: string;
   testCases: TestCaseRequest[];
+}
+
+export interface CodingExerciseResponse extends CodingExerciseRequest {
+  exerciseId: number;
 }

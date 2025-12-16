@@ -32,6 +32,16 @@ export async function createQuiz(lessonId: number, payload: QuizRequest) {
     return handleJsonResponse(response);
 }
 
+export async function updateQuiz(lessonId: number, payload: QuizRequest) {
+    const url = `${BASE_URL}/lesson/${lessonId}`;
+    const response = await fetch(url, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(payload),
+    });
+    return handleJsonResponse(response);
+}
+
 export async function getQuizByLessonId(lessonId: number) {
     const url = `${BASE_URL}/lesson/${lessonId}`;
     const response = await fetch(url, {

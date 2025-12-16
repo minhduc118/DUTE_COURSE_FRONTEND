@@ -1,11 +1,30 @@
-import { Outlet, Link, useLocation } from "react-router-dom";
-import { useState } from "react";
+import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
 import "../../../style/AdminLayout.css";
+import { useAuth } from "../../../context/AuthContext";
 
 export default function AdminLayout() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const { user, isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowUserDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const menuItems = [
     { path: "/admin", icon: "bi-speedometer2", label: "Dashboard" },
@@ -18,6 +37,21 @@ export default function AdminLayout() {
 
   const isActive = (path: string) => {
     return location.pathname === path;
+  };
+
+  const handleLogout = () => {
+    logout();
+    setShowUserDropdown(false);
+    navigate("/");
+  };
+
+  const getInitials = (name: string | undefined) => {
+    if (!name) return "U";
+    const names = name.trim().split(" ");
+    if (names.length >= 2) {
+      return (names[0][0] + names[names.length - 1][0]).toUpperCase();
+    }
+    return name[0].toUpperCase();
   };
 
   return (
@@ -101,45 +135,65 @@ export default function AdminLayout() {
                   <span className="notification-badge"></span>
                 </button>
 
-                {/* Profile Dropdown */}
-                <div className="dropdown">
-                  <button
-                    className="btn btn-light d-flex align-items-center gap-2"
-                    onClick={() => setIsProfileOpen(!isProfileOpen)}
-                    data-bs-toggle="dropdown"
+                {/* User Avatar with Dropdown */}
+                <div className="user-menu-wrapper" ref={dropdownRef}>
+                  <div
+                    className="user-avatar"
+                    onClick={() => setShowUserDropdown(!showUserDropdown)}
+                    style={{ cursor: "pointer" }}
                   >
-                    <div className="profile-avatar">
-                      <i className="bi bi-person"></i>
-                    </div>
-                    <i className="bi bi-chevron-down"></i>
-                  </button>
+                    {user?.avatarUrl ? (
+                      <img
+                        src={user.avatarUrl}
+                        alt="Avatar"
+                        className="user-avatar"
+                      />
+                    ) : (
+                      getInitials(user?.fullName)
+                    )}
+                  </div>
 
-                  <ul
-                    className={`dropdown-menu dropdown-menu-end ${isProfileOpen ? "show" : ""
-                      }`}
-                  >
-                    <li>
-                      <Link className="dropdown-item" to="/admin/profile">
-                        <i className="bi bi-person me-2"></i>
-                        Profile
+                  {showUserDropdown && (
+                    <div className="user-dropdown">
+                      <div className="user-dropdown-header">
+                        <div className="user-dropdown-avatar">
+                          {user?.avatarUrl ? (
+                            <img
+                              src={user.avatarUrl}
+                              alt="Avatar"
+                              className="user-dropdown-avatar"
+                            />
+                          ) : (
+                            getInitials(user?.fullName)
+                          )}
+                        </div>
+                        <div className="user-dropdown-info">
+                          <div className="user-dropdown-name">
+                            {user?.fullName || "User"}
+                          </div>
+                          <div className="user-dropdown-email">
+                            {user?.email}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="user-dropdown-divider"></div>
+                      <Link
+                        to="/profile"
+                        className="user-dropdown-item"
+                        onClick={() => setShowUserDropdown(false)}
+                      >
+                        <i className="bi bi-person"></i>
+                        <span>Trang cá nhân</span>
                       </Link>
-                    </li>
-                    <li>
-                      <Link className="dropdown-item" to="/admin/settings">
-                        <i className="bi bi-gear me-2"></i>
-                        Settings
-                      </Link>
-                    </li>
-                    <li>
-                      <hr className="dropdown-divider" />
-                    </li>
-                    <li>
-                      <button className="dropdown-item text-danger">
-                        <i className="bi bi-box-arrow-right me-2"></i>
-                        Logout
+                      <button
+                        className="user-dropdown-item"
+                        onClick={handleLogout}
+                      >
+                        <i className="bi bi-box-arrow-right"></i>
+                        <span>Đăng xuất</span>
                       </button>
-                    </li>
-                  </ul>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

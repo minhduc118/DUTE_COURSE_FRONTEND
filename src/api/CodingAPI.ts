@@ -24,6 +24,7 @@ async function handleJsonResponse(response: Response) {
 
 export async function createCodingExercise(lessonId: number, payload: CodingExerciseRequest) {
     const url = `${BASE_URL}/lesson/${lessonId}`;
+    console.log(payload);
     const response = await fetch(url, {
         method: "POST",
         headers: getAuthHeaders(),
@@ -42,3 +43,33 @@ export async function getCodingExerciseByLessonId(lessonId: number) {
     }
     return handleJsonResponse(response);
 }
+
+export async function updateCodingExercise(exerciseId: number, payload: CodingExerciseRequest) {
+    const url = `${BASE_URL}/${exerciseId}`;
+    const response = await fetch(url, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(payload),
+    });
+    return handleJsonResponse(response);
+}
+
+export async function deleteCodingExercise(exerciseId: number) {
+    const url = `${BASE_URL}/${exerciseId}`;
+    const response = await fetch(url, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+    });
+    if (!response.ok) {
+        throw new Error(`Failed to delete exercise (${response.status})`);
+    }
+}
+
+export async function getCodingExerciseById(exerciseId: number) {
+    const url = `${BASE_URL}/${exerciseId}`;
+    const response = await fetch(url, {
+        headers: getAuthHeaders(),
+    });
+    return handleJsonResponse(response);
+}
+

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { LessonModel, QuizRequest, QuestionRequest, OptionRequest } from "../../../../model/CourseModel";
-import { createQuiz, getQuizByLessonId } from "../../../../api/QuizAPI";
+import { LessonModel, QuizRequest, QuizQuestionRequest, QuizOptionRequest } from "../../../../model/CourseModel";
+import { createQuiz, getQuizByLessonId, updateQuiz } from "../../../../api/QuizAPI";
 
 interface QuizBuilderModalProps {
     lesson: LessonModel;
@@ -8,12 +8,13 @@ interface QuizBuilderModalProps {
     onSuccess: () => void;
 }
 
-const defaultOption: OptionRequest = { content: "", isCorrect: false };
-const defaultQuestion: QuestionRequest = {
-    content: "",
+const defaultOption: QuizOptionRequest = { optionText: "", isCorrect: false, optionOrder: 1 };
+const defaultQuestion: QuizQuestionRequest = {
+    questionText: "",
+    questionOrder: 1,
     options: [
-        { ...defaultOption, content: "Option A", isCorrect: true },
-        { ...defaultOption, content: "Option B", isCorrect: false },
+        { ...defaultOption, optionText: "Option A", isCorrect: true, optionOrder: 1 },
+        { ...defaultOption, optionText: "Option B", isCorrect: false, optionOrder: 2 },
     ],
 };
 const defaultQuiz: QuizRequest = {
@@ -30,36 +31,40 @@ export default function QuizBuilderModal({ lesson, onClose, onSuccess }: QuizBui
     const [fetching, setFetching] = useState(true);
 
     useEffect(() => {
-        // Load existing quiz data if any
-        const loadQuiz = async () => {
-            try {
-                const data = await getQuizByLessonId(lesson.lessonId);
-                if (data) {
-                    setQuizForm(data);
-                } else {
-                    // If no quiz, pre-fill title with lesson title
-                    setQuizForm(prev => ({ ...prev, title: lesson.title }));
+  
+        console.log(lesson.quizId);
+        if (lesson.quizId) {
+            const loadQuiz = async () => {
+                try {
+                    const data = await getQuizByLessonId(lesson.lessonId);
+                    if (data) {
+                        setQuizForm(data);
+                    }
+                } catch (error) {
+                    console.error("Error loading quiz:", error);
+                } finally {
+                    setFetching(false);
                 }
-            } catch (error) {
-                console.error("Error loading quiz:", error);
-            } finally {
-                setFetching(false);
-            }
-        };
-        loadQuiz();
+            };
+            loadQuiz();
+        } else {
+            // New quiz: use defaults
+            setQuizForm(prev => ({ ...prev, title: lesson.title }));
+            setFetching(false);
+        }
     }, [lesson]);
 
     const handleQuizChange = (field: keyof QuizRequest, value: any) => {
         setQuizForm({ ...quizForm, [field]: value });
     };
 
-    const handleQuestionChange = (qIndex: number, field: keyof QuestionRequest, value: any) => {
+    const handleQuestionChange = (qIndex: number, field: keyof QuizQuestionRequest, value: any) => {
         const updatedQuestions = [...quizForm.questions];
         updatedQuestions[qIndex] = { ...updatedQuestions[qIndex], [field]: value };
         setQuizForm({ ...quizForm, questions: updatedQuestions });
     };
 
-    const handleOptionChange = (qIndex: number, oIndex: number, field: keyof OptionRequest, value: any) => {
+    const handleOptionChange = (qIndex: number, oIndex: number, field: keyof QuizOptionRequest, value: any) => {
         const updatedQuestions = [...quizForm.questions];
         const updatedOptions = [...updatedQuestions[qIndex].options];
         updatedOptions[oIndex] = { ...updatedOptions[oIndex], [field]: value };
@@ -71,9 +76,11 @@ export default function QuizBuilderModal({ lesson, onClose, onSuccess }: QuizBui
         setQuizForm({
             ...quizForm,
             questions: [...quizForm.questions, {
-                ...defaultQuestion, options: [
-                    { content: "", isCorrect: true },
-                    { content: "", isCorrect: false }
+                ...defaultQuestion,
+                questionOrder: quizForm.questions.length + 1,
+                options: [
+                    { optionText: "", isCorrect: true, optionOrder: 1 },
+                    { optionText: "", isCorrect: false, optionOrder: 2 }
                 ]
             }],
         });
@@ -86,7 +93,11 @@ export default function QuizBuilderModal({ lesson, onClose, onSuccess }: QuizBui
 
     const addOption = (qIndex: number) => {
         const updatedQuestions = [...quizForm.questions];
-        updatedQuestions[qIndex].options.push({ content: "", isCorrect: false });
+        updatedQuestions[qIndex].options.push({
+            optionText: "",
+            isCorrect: false,
+            optionOrder: updatedQuestions[qIndex].options.length + 1
+        });
         setQuizForm({ ...quizForm, questions: updatedQuestions });
     };
 
@@ -100,7 +111,12 @@ export default function QuizBuilderModal({ lesson, onClose, onSuccess }: QuizBui
         e.preventDefault();
         setLoading(true);
         try {
-            await createQuiz(lesson.lessonId, quizForm);
+            // If lesson has quizId or form has quizId -> update
+            if (lesson.quizId || quizForm.quizId) {
+                await updateQuiz(lesson.lessonId, quizForm);
+            } else {
+                await createQuiz(lesson.lessonId, quizForm);
+            }
             onSuccess();
             onClose();
         } catch (error: any) {
@@ -208,8 +224,8 @@ export default function QuizBuilderModal({ lesson, onClose, onSuccess }: QuizBui
                                             <input
                                                 type="text"
                                                 className="form-control"
-                                                value={q.content}
-                                                onChange={(e) => handleQuestionChange(qIndex, "content", e.target.value)}
+                                                value={q.questionText}
+                                                onChange={(e) => handleQuestionChange(qIndex, "questionText", e.target.value)}
                                                 required
                                                 placeholder="e.g., What is 2 + 2?"
                                             />
@@ -229,8 +245,8 @@ export default function QuizBuilderModal({ lesson, onClose, onSuccess }: QuizBui
                                                 <input
                                                     type="text"
                                                     className="form-control"
-                                                    value={opt.content}
-                                                    onChange={(e) => handleOptionChange(qIndex, oIndex, "content", e.target.value)}
+                                                    value={opt.optionText}
+                                                    onChange={(e) => handleOptionChange(qIndex, oIndex, "optionText", e.target.value)}
                                                     required
                                                     placeholder={`Option ${oIndex + 1}`}
                                                 />

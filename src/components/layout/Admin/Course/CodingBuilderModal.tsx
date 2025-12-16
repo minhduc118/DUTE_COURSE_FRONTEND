@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { LessonModel, CodingExerciseRequest, TestCaseRequest } from "../../../../model/CourseModel";
-import { createCodingExercise, getCodingExerciseByLessonId } from "../../../../api/CodingAPI";
+import { createCodingExercise, getCodingExerciseByLessonId, updateCodingExercise } from "../../../../api/CodingAPI";
 
 interface CodingBuilderModalProps {
     lesson: LessonModel;
@@ -8,19 +8,62 @@ interface CodingBuilderModalProps {
     onSuccess: () => void;
 }
 
-const defaultTestCase: TestCaseRequest = { input: "", expectedOutput: "", isHidden: false };
+export type ProgrammingLanguage =
+    | "C"
+    | "JAVA"
+    | "JAVASCRIPT"
+    | "CSHARP"
+    | "SQLSERVER";
+
+const STARTER_TEMPLATES: Record<ProgrammingLanguage, string> = {
+    C: `#include <stdio.h>
+
+int main() {
+    // Your code here
+    return 0;
+}`,
+
+    JAVA: `import java.util.*;
+
+public class Solution {
+    public static void main(String[] args) {
+        // Your code here
+    }
+}`,
+
+    JAVASCRIPT: `function solve() {
+    // Your code here
+}
+
+solve();`,
+
+    CSHARP: `using System;
+
+class Solution {
+    static void Main() {
+        // Your code here
+    }
+}`,
+
+    SQLSERVER: `-- Write your SQL Server query here
+SELECT * 
+FROM your_table;`
+};
+
+const defaultTestCase: TestCaseRequest = { input: "", expectedOutput: "", isHidden: false, testOrder: 0 };
 const defaultCoding: CodingExerciseRequest = {
     title: "",
     problemStatement: "",
-    language: "JAVA", // Default to JAVA as per requirement
-    starterCode: "public class Solution {\n    public static void main(String[] args) {\n        // Your code here\n    }\n}",
+    language: "JAVA",
+    starterCode: STARTER_TEMPLATES["JAVA"],
     testCases: [
-        { ...defaultTestCase, input: "1 2", expectedOutput: "3", isHidden: false },
+        { ...defaultTestCase, input: "1 2", expectedOutput: "3", isHidden: false, testOrder: 1 },
     ],
 };
 
 export default function CodingBuilderModal({ lesson, onClose, onSuccess }: CodingBuilderModalProps) {
     const [codingForm, setCodingForm] = useState<CodingExerciseRequest>(defaultCoding);
+    const [exerciseId, setExerciseId] = useState<number | null>(null);
     const [loading, setLoading] = useState(false);
     const [fetching, setFetching] = useState(true);
 
@@ -30,6 +73,9 @@ export default function CodingBuilderModal({ lesson, onClose, onSuccess }: Codin
                 const data = await getCodingExerciseByLessonId(lesson.lessonId);
                 if (data) {
                     setCodingForm(data);
+                    if (data.exerciseId) {
+                        setExerciseId(data.exerciseId);
+                    }
                 } else {
                     setCodingForm(prev => ({ ...prev, title: lesson.title }));
                 }
@@ -44,6 +90,15 @@ export default function CodingBuilderModal({ lesson, onClose, onSuccess }: Codin
 
     const handleFormChange = (field: keyof CodingExerciseRequest, value: any) => {
         setCodingForm({ ...codingForm, [field]: value });
+    };
+
+    const handleLanguageChange = (newLanguage: string) => {
+        const lang = newLanguage as ProgrammingLanguage;
+        setCodingForm({
+            ...codingForm,
+            language: lang,
+            starterCode: STARTER_TEMPLATES[lang] || ""
+        });
     };
 
     const handleTestCaseChange = (index: number, field: keyof TestCaseRequest, value: any) => {
@@ -68,7 +123,20 @@ export default function CodingBuilderModal({ lesson, onClose, onSuccess }: Codin
         e.preventDefault();
         setLoading(true);
         try {
-            await createCodingExercise(lesson.lessonId, codingForm);
+            // Assign testOrder to each test case based on its index
+            const payload = {
+                ...codingForm,
+                testCases: codingForm.testCases.map((tc, index) => ({
+                    ...tc,
+                    testOrder: index + 1 // 1-based index
+                }))
+            };
+
+            if (exerciseId) {
+                await updateCodingExercise(exerciseId, payload);
+            } else {
+                await createCodingExercise(lesson.lessonId, payload);
+            }
             onSuccess();
             onClose();
         } catch (error: any) {
@@ -117,10 +185,10 @@ export default function CodingBuilderModal({ lesson, onClose, onSuccess }: Codin
                                     </div>
 
                                     <div className="mb-3">
-                                        <label className="form-label">Problem Statement (HTML/Markdown support planned)</label>
+                                        <label className="form-label">Problem Statement</label>
                                         <textarea
                                             className="form-control font-monospace"
-                                            rows={10}
+                                            rows={8}
                                             value={codingForm.problemStatement}
                                             onChange={(e) => handleFormChange("problemStatement", e.target.value)}
                                             required
@@ -129,13 +197,51 @@ export default function CodingBuilderModal({ lesson, onClose, onSuccess }: Codin
                                     </div>
 
                                     <div className="mb-3">
-                                        <label className="form-label">Review Starter Code (JAVA)</label>
+                                        <label className="form-label">Programming Language</label>
+                                        <select
+                                            className="form-select"
+                                            value={codingForm.language}
+                                            onChange={(e) => handleLanguageChange(e.target.value)}
+                                        >
+                                            <option value="JAVA">Java</option>
+                                            <option value="C">C</option>
+                                            <option value="JAVASCRIPT">JavaScript</option>
+                                            <option value="CSHARP">C#</option>
+                                            <option value="SQLSERVER">SQL Server</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="mb-3">
+                                        <label className="form-label">Starter Code ({codingForm.language})</label>
                                         <textarea
                                             className="form-control font-monospace bg-dark text-light"
                                             rows={10}
                                             value={codingForm.starterCode}
                                             onChange={(e) => handleFormChange("starterCode", e.target.value)}
                                             required
+                                        />
+                                    </div>
+
+                                    <div className="mb-3">
+                                        <label className="form-label">Instructions (Optional)</label>
+                                        <textarea
+                                            className="form-control"
+                                            rows={3}
+                                            value={codingForm.instructions || ""}
+                                            onChange={(e) => handleFormChange("instructions", e.target.value)}
+                                            placeholder="Specific constraints or hints..."
+                                        />
+                                    </div>
+
+                                    <div className="mb-3">
+                                        <label className="form-label">Time Limit (Seconds)</label>
+                                        <input
+                                            type="number"
+                                            className="form-control"
+                                            value={codingForm.timeLimitSeconds || ""}
+                                            onChange={(e) => handleFormChange("timeLimitSeconds", Number(e.target.value))}
+                                            placeholder="e.g., 2"
+                                            min={1}
                                         />
                                     </div>
                                 </div>
@@ -164,7 +270,7 @@ export default function CodingBuilderModal({ lesson, onClose, onSuccess }: Codin
                                                         rows={2}
                                                         value={tc.input}
                                                         onChange={(e) => handleTestCaseChange(index, "input", e.target.value)}
-                                                        required // Assuming input can be empty string in some cases, but usually not. Let's keep required.
+                                                        required
                                                     />
                                                 </div>
                                                 <div className="mb-2">
