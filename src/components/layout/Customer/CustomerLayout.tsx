@@ -2,6 +2,7 @@ import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import "../../../style/CustomerLayout.css";
 import { useAuth } from "../../../context/AuthContext";
+import { Footer } from "../../common/Footer";
 
 export default function CustomerLayout() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -172,9 +173,11 @@ export default function CustomerLayout() {
           <div className="page-container-centered">
             <Outlet />
           </div>
+
+          {/* Footer - Full Width but scrollable */}
+          <Footer />
         </div>
       </main>
     </div>
   );
 }
-
