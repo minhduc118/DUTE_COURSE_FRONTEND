@@ -24,6 +24,7 @@ export const CourseFormModal: React.FC<CourseFormModalProps> = ({
     price: "",
     discountPrice: "",
     durationInMonths: "", // Added durationInMonths
+    introduction: "", // Added introduction
     thumbnailBase64: "",
     status: "DRAFT",
   });
@@ -41,6 +42,7 @@ export const CourseFormModal: React.FC<CourseFormModalProps> = ({
         price: course.price?.toString() || "",
         discountPrice: course.discountPrice?.toString() || "",
         durationInMonths: course.durationInMonths?.toString() || "", // Added durationInMonths
+        introduction: course.introduction || "", // Added introduction
         thumbnailBase64: course.thumbnailBase64 || "",
         status: course.status || "DRAFT",
       });
@@ -60,6 +62,7 @@ export const CourseFormModal: React.FC<CourseFormModalProps> = ({
         price: "",
         discountPrice: "",
         durationInMonths: "", // Added durationInMonths
+        introduction: "", // Added introduction
         thumbnailBase64: "",
         status: "DRAFT",
       });
@@ -104,6 +107,7 @@ export const CourseFormModal: React.FC<CourseFormModalProps> = ({
       price: "",
       discountPrice: "",
       durationInMonths: "", // Added durationInMonths
+      introduction: "", // Added introduction
       thumbnailBase64: "",
       status: "DRAFT",
     });
@@ -147,6 +151,7 @@ export const CourseFormModal: React.FC<CourseFormModalProps> = ({
         title: formData.title,
         slug: formData.slug,
         description: formData.description || null,
+        introduction: formData.introduction || null,
         benefits: formData.benefits || null,
         price: parseFloat(formData.price),
         status: formData.status,
@@ -266,6 +271,20 @@ export const CourseFormModal: React.FC<CourseFormModalProps> = ({
                   />
                   {errors.benefits && (
                     <div className="invalid-feedback">{errors.benefits}</div>
+                  )}
+                </div>
+                {/* Introduction */}
+                <div className="col-12">
+                  <label className="form-label">Introduction (Giới thiệu chi tiết)</label>
+                  <textarea
+                    className={`form-control ${errors.introduction ? "is-invalid" : ""}`}
+                    name="introduction"
+                    value={formData.introduction}
+                    onChange={handleChange}
+                    rows={6}
+                  />
+                  {errors.introduction && (
+                    <div className="invalid-feedback">{errors.introduction}</div>
                   )}
                 </div>
                 {/* Price, Discount, Duration Row */}

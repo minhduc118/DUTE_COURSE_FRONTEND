@@ -204,6 +204,7 @@ export default function CourseDetailPage() {
 
   const openBuilder = (lesson: LessonModel) => {
     setCurrentLessonForBuilder(lesson);
+    console.log("open builder", lesson);
     if (lesson.lessonType === LessonType.QUIZ) {
       setShowQuizBuilder(true);
     } else if (lesson.lessonType === LessonType.CODING) {
@@ -297,26 +298,36 @@ export default function CourseDetailPage() {
             <p className="text-muted">
               {course.description || "No description"}
             </p>
-            <div className="row">
-              <div className="col-md-6">
-                <h6 className="text-muted">Price</h6>
-                <p className="fs-5 fw-semibold text-primary">
-                  {new Intl.NumberFormat("vi-VN", {
-                    style: "currency",
-                    currency: "VND",
-                  }).format(course.price)}
-                </p>
-              </div>
-              {course.discountPrice && course.discountPrice < course.price && (
-                <div className="col-md-6">
-                  <h6 className="text-muted">Discount Price</h6>
-                  <p className="fs-5 text-danger">
+            <div className="mb-3">
+              <h6 className="text-muted">Introduction</h6>
+              <p className="text-muted" style={{ whiteSpace: "pre-line" }}>
+                {course.introduction || "No introduction"}
+              </p>
+            </div>
+            <div className="mb-3">
+              <h6 className="text-muted">Price</h6>
+              {course.discountPrice && course.discountPrice < course.price ? (
+                <div>
+                  <p className="fs-5 fw-semibold text-danger mb-1">
                     {new Intl.NumberFormat("vi-VN", {
                       style: "currency",
                       currency: "VND",
                     }).format(course.discountPrice)}
                   </p>
+                  <p className="text-muted text-decoration-line-through mb-0">
+                    {new Intl.NumberFormat("vi-VN", {
+                      style: "currency",
+                      currency: "VND",
+                    }).format(course.price)}
+                  </p>
                 </div>
+              ) : (
+                <p className="fs-5 fw-semibold text-primary mb-0">
+                  {new Intl.NumberFormat("vi-VN", {
+                    style: "currency",
+                    currency: "VND",
+                  }).format(course.price)}
+                </p>
               )}
             </div>
             <div className="d-flex gap-3">
@@ -432,7 +443,7 @@ export default function CourseDetailPage() {
                           <td>
                             {lesson.durationSeconds
                               ? `${lesson.durationSeconds}s`
-                              : "—"}
+                              : "null"}
                           </td>
                           <td>
                             <div className="d-flex gap-2">

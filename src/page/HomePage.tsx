@@ -1,21 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { CourseModel } from "../model/CourseModel";
 import { getAllCourses } from "../api/CourseAPI";
-import { CourseCard } from "../components/common/CourseCard";
 import "../style/HomePage.css";
 
 export default function HomePage() {
   const [proCourses, setProCourses] = useState<CourseModel[]>([]);
   const [freeCourses, setFreeCourses] = useState<CourseModel[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is logged in
-    const token = localStorage.getItem("authToken");
-    setIsLoggedIn(!!token);
-
     loadCourses();
   }, []);
 
@@ -23,15 +18,14 @@ export default function HomePage() {
     try {
       setLoading(true);
       const response = await getAllCourses(0, 20);
-      console.log("Courses response:", response);
       const courses = response.result;
 
-      // Phân loại Pro và Free courses
+      // Filter Pro and Free
       const pro = courses.filter((c) => c.price > 0);
       const free = courses.filter((c) => c.price === 0);
 
-      setProCourses(pro.slice(0, 10));
-      setFreeCourses(free.slice(0, 6));
+      setProCourses(pro);
+      setFreeCourses(free);
     } catch (error) {
       console.error("Error loading courses:", error);
     } finally {
@@ -39,106 +33,166 @@ export default function HomePage() {
     }
   };
 
-  return (
-    <div className="homepage">
-      {/* Hero Banner */}
-      <section className="hero-banner">
-        <div className="container-fluid px-4">
-          <div className="hero-content">
-            <div className="hero-left">
-              <h1 className="hero-title">F8 trên Youtube</h1>
-              <p className="hero-description">
-                F8 được nhắc tới ở mọi nơi, ở đâu có cơ hội việc làm cho nghề IT
-                và có những con người yêu thích lập trình F8 sẽ ở đó.
-              </p>
-              {!isLoggedIn ? (
-                <div className="hero-auth-buttons">
-                  <Link to="/login" className="hero-button hero-button-primary">
-                    ĐĂNG NHẬP
-                  </Link>
-                  <Link to="/register" className="hero-button hero-button-secondary">
-                    ĐĂNG KÝ
-                  </Link>
-                </div>
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(price);
+  };
+
+  const formatDuration = (seconds?: number) => {
+    if (!seconds) return "0h 0m";
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    return `${hours}h ${minutes}m`;
+  };
+
+  const CourseItem = ({ course, isPro }: { course: CourseModel; isPro: boolean }) => {
+
+    // Resolve Thumbnail
+    const thumbnailSrc = course.thumbnailBase64?.startsWith("data:")
+      ? course.thumbnailBase64
+      : course.thumbnailBase64
+        ? `data:image/png;base64,${course.thumbnailBase64}`
+        : null;
+
+    return (
+      <div
+        className="course-card-new"
+        onClick={() => navigate(`/courses/${course.slug}`)}
+      >
+        <div className="card-thumb-wrapper">
+          {thumbnailSrc ? (
+            <img src={thumbnailSrc} alt={course.title} className="card-thumb" />
+          ) : (
+            <div className={`card-placeholder gradient-${course.courseId % 5}`}>
+              <span>{course.title.charAt(0)}</span>
+            </div>
+          )}
+          <div className="card-overlay">
+            <button className="btn-card-play">
+              <i className="bi bi-play-fill"></i>
+            </button>
+          </div>
+          {isPro && (
+            <div className="card-badge">
+              <i className="bi bi-crown-fill"></i>
+            </div>
+          )}
+        </div>
+
+        <div className="card-content">
+          <h3 className="card-title">{course.title}</h3>
+
+          <div className="card-instructor">
+            <div className="instructor-avatar-small">
+              {/* Placeholder for instructor avatar */}
+              <img src="https://via.placeholder.com/20" alt="Ins" />
+            </div>
+            <span>Sơn Đặng</span> {/* Hardcoded for now per design */}
+          </div>
+
+          <div className="card-rating">
+            <i className="bi bi-star-fill text-yellow"></i>
+            <span className="rating-val">4.9</span>
+            <span className="rating-count">(1.2k đánh giá)</span>
+          </div>
+
+          <div className="card-footer">
+            <div className="price-box">
+              {isPro ? (
+                <>
+                  {course.discountPrice && course.discountPrice < course.price ? (
+                    <>
+                      <span className="price-old">{formatPrice(course.price)}</span>
+                      <span className="price-current">{formatPrice(course.discountPrice)}</span>
+                    </>
+                  ) : (
+                    <span className="price-current">{formatPrice(course.price)}</span>
+                  )}
+                </>
               ) : (
-                <button className="hero-button">ĐĂNG KÝ KÊNH</button>
+                <span className="price-free">Miễn phí</span>
               )}
             </div>
-            <div className="hero-right">
-              <div className="hero-play-button">
-                <i className="bi bi-play-fill"></i>
+            <div className="meta-box">
+              <i className="bi bi-play-circle"></i>
+              <span>{course.numberLessons || 0} bài học</span>
+              <span className="mx-1">•</span>
+              <i className="bi bi-clock"></i>
+              <span>{formatDuration(course.durationSeconds)}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="homepage-new">
+      <div className="max-w-7xl mx-auto space-y-10">
+
+        {/* HERO SECTION */}
+        <section className="hero-section">
+          <div className="hero-bg-texture"></div>
+          <div className="hero-content-wrapper">
+            <div className="hero-text-col">
+              <h2 className="hero-headline">Học lập trình để đi làm</h2>
+              <p className="hero-subline">
+                Thực hành dự án thực tế, lộ trình rõ ràng.<br />
+                Khóa học chất lượng cao dành cho người mới bắt đầu.
+              </p>
+              <button className="btn-hero-cta">Đăng ký ngay</button>
+            </div>
+            <div className="hero-visual-col">
+              <div className="hero-visual-card">
+                <div className="visual-deco deco-1"></div>
+                <div className="visual-deco deco-2"></div>
+                <button className="btn-visual-play">
+                  <i className="bi bi-play-fill"></i>
+                </button>
+              </div>
+              <div className="visual-dots">
+                <span className="dot active"></span>
+                <span className="dot"></span>
+                <span className="dot"></span>
               </div>
             </div>
           </div>
-          <div className="hero-dots">
-            <span className="dot "></span>
-            <span className="dot active"></span>
-            <span className="dot"></span>
-            <span className="dot"></span>
-            <span className="dot"></span>
-          </div>
-        </div>
-      </section>
+        </section>
 
-      <div className="container-fluid px-4">
-        {/* Pro Courses Section */}
+        {/* PRO COURSES */}
         {!loading && proCourses.length > 0 && (
-          <section className="courses-section">
+          <section>
             <div className="section-header">
-              <h2 className="section-title">
-                Khóa học Pro <span className="badge-new">MỚI</span>
-              </h2>
+              <h2 className="section-heading">Khóa học Pro</h2>
+              <span className="badge-new">Mới</span>
             </div>
-            <div className="courses-grid">
-              {proCourses.map((course) => (
-                <CourseCard
-                  key={course.courseId}
-                  course={course}
-                  variant="pro"
-                />
-              ))}
+            <div className="grid-courses">
+              {proCourses.map(c => <CourseItem key={c.courseId} course={c} isPro={true} />)}
             </div>
           </section>
         )}
 
-        {/* Free Courses Section */}
+        {/* FREE COURSES */}
         {!loading && freeCourses.length > 0 && (
-          <section className="courses-section">
+          <section className="pb-10">
             <div className="section-header">
-              <h2 className="section-title">Khóa học miễn phí</h2>
-              <Link to="/roadmap" className="view-roadmap-link">
-                Xem lộ trình &gt;
-              </Link>
+              <h2 className="section-heading">Khóa học miễn phí</h2>
+              <Link to="/roadmap" className="link-roadmap">Xem lộ trình</Link>
             </div>
-            <div className="courses-grid">
-              {freeCourses.map((course) => (
-                <CourseCard
-                  key={course.courseId}
-                  course={course}
-                  variant="free"
-                />
-              ))}
+            <div className="grid-courses">
+              {freeCourses.map(c => <CourseItem key={c.courseId} course={c} isPro={false} />)}
             </div>
           </section>
         )}
 
-        {/* Loading State */}
         {loading && (
-          <div className="text-center py-5">
-            <div className="spinner-border text-primary" role="status">
-              <span className="visually-hidden">Loading...</span>
-            </div>
-          </div>
-        )}
-
-        {/* Empty State */}
-        {!loading && proCourses.length === 0 && freeCourses.length === 0 && (
-          <div className="text-center py-5">
-            <p className="text-muted">Chưa có khóa học nào</p>
+          <div className="loading-container">
+            <div className="spinner-border text-danger" role="status"></div>
           </div>
         )}
       </div>
     </div>
   );
 }
-

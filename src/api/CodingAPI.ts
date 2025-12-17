@@ -46,6 +46,7 @@ export async function getCodingExerciseByLessonId(lessonId: number) {
 
 export async function updateCodingExercise(exerciseId: number, payload: CodingExerciseRequest) {
     const url = `${BASE_URL}/${exerciseId}`;
+    console.log(payload);
     const response = await fetch(url, {
         method: "PUT",
         headers: getAuthHeaders(),

@@ -68,24 +68,31 @@ export default function CodingBuilderModal({ lesson, onClose, onSuccess }: Codin
     const [fetching, setFetching] = useState(true);
 
     useEffect(() => {
-        const loadCoding = async () => {
-            try {
-                const data = await getCodingExerciseByLessonId(lesson.lessonId);
-                if (data) {
-                    setCodingForm(data);
-                    if (data.exerciseId) {
-                        setExerciseId(data.exerciseId);
+        if (lesson.codingExerciseId) {
+            const loadCoding = async () => {
+                try {
+                    const data = await getCodingExerciseByLessonId(lesson.lessonId);
+                    console.log("Load lesson details", data);
+                    if (data) {
+                        setCodingForm(data);
+                        if (data.exerciseId) {
+                            setExerciseId(data.exerciseId);
+                        }
+                    } else {
+                        setCodingForm(prev => ({ ...prev, title: lesson.title }));
                     }
-                } else {
-                    setCodingForm(prev => ({ ...prev, title: lesson.title }));
+                } catch (error) {
+                    console.error("Error loading coding exercise:", error);
+                } finally {
+                    setFetching(false);
                 }
-            } catch (error) {
-                console.error("Error loading coding exercise:", error);
-            } finally {
-                setFetching(false);
-            }
-        };
-        loadCoding();
+            };
+            loadCoding();
+        } else {
+            setCodingForm(prev => ({ ...prev, title: lesson.title }));
+            setFetching(false);
+        }
+
     }, [lesson]);
 
     const handleFormChange = (field: keyof CodingExerciseRequest, value: any) => {

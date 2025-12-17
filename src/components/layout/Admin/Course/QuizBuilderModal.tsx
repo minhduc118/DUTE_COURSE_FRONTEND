@@ -31,12 +31,13 @@ export default function QuizBuilderModal({ lesson, onClose, onSuccess }: QuizBui
     const [fetching, setFetching] = useState(true);
 
     useEffect(() => {
-  
+
         console.log(lesson.quizId);
         if (lesson.quizId) {
             const loadQuiz = async () => {
                 try {
                     const data = await getQuizByLessonId(lesson.lessonId);
+                    console.log("Load lesson details", data);
                     if (data) {
                         setQuizForm(data);
                     }

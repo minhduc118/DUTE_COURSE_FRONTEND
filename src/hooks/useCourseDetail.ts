@@ -26,6 +26,7 @@ export function useCourseDetail(slug?: string) {
     setError(null);
     try {
       const data = await getCourseDetail(slug);
+      console.log("load course", data);
       setCourse(data);
     } catch (err: any) {
       setError(err?.message || "Failed to load course detail");

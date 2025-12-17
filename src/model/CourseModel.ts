@@ -23,6 +23,7 @@ export class CourseModel {
   numberLessons?: number;
   durationSeconds?: number;
   durationInMonths?: number;
+  introduction?: string;
 
   // New Metadata
   videoLessonCount?: number;
@@ -59,6 +60,7 @@ export class LessonModel {
   durationSeconds?: number;
   courseId?: number;
   quizId?: number;
+  codingExerciseId?: number;
   isPreview!: boolean;
   isLocked!: boolean;
 

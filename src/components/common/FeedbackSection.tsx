@@ -41,19 +41,13 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
   useEffect(() => {
     const fetchData = async () => {
       try {
-
-        const data = await getCourseReviews(courseId, 0, 5);
-        console.log(data);
+        const data = await getCourseReviews(courseId, 0, 10);
         setReviews(data.content);
-
 
         if (isAuthenticated) {
           try {
             const reviewExists = await getCourseReviewExists(courseId);
-            console.log(reviewExists);
             setHasReviewed(reviewExists.review);
-
-
             if (reviewExists.review) {
               setNewRating(reviewExists.rating);
               setNewComment(reviewExists.comment);
@@ -80,6 +74,9 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
       ).toFixed(1)
       : "0.0";
 
+  // Mock distribution for UI (replace with real data if available)
+  const ratingDistribution = [75, 18, 5, 1, 1]; // 5 star to 1 star %
+
   const handleSubmit = async () => {
     if (newRating === 0 || !newComment.trim()) return;
 
@@ -91,26 +88,18 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
       };
 
       if (hasReviewed) {
-        const updatedReview = await updateCourseReview(reviewRequest);
-
-        const data = await getCourseReviews(courseId, 0, 5);
+        await updateCourseReview(reviewRequest);
+        const data = await getCourseReviews(courseId, 0, 10);
         setReviews(data.content);
-        setError(null);
         addToast("Đánh giá của bạn đã được cập nhật!", "success");
       } else {
-        // Create new review
         const createdReview = await addCourseReview(reviewRequest);
         setReviews([createdReview, ...reviews]);
         setHasReviewed(true);
-        setError(null);
         addToast("Đánh giá của bạn đã được gửi!", "success");
       }
     } catch (err) {
-      setError(
-        hasReviewed
-          ? "Không thể cập nhật đánh giá. Vui lòng thử lại."
-          : "Không thể gửi đánh giá. Vui lòng thử lại."
-      );
+      setError("Không thể gửi đánh giá. Vui lòng thử lại.");
       console.error(err);
     }
   };
@@ -120,98 +109,93 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
 
   return (
     <section className="feedback-section">
-      <div className="container">
-        <div className="feedback-header">
-          <div>
-            <h2 className="feedback-title">Đánh giá khóa học</h2>
-            <div className="total-reviews">({reviews.length} đánh giá)</div>
+      {/* Rating Breakdown Section */}
+      <div className="feedback-header-row">
+        {/* Left: Big Number */}
+        <div className="rating-big-box">
+          <div className="rating-number">{averageRating}</div>
+          <div className="rating-stars-big">
+            {[1, 2, 3, 4, 5].map(s => (
+              <i key={s} className={`bi ${s <= Number(averageRating) ? 'bi-star-fill' : s - 0.5 <= Number(averageRating) ? 'bi-star-half' : 'bi-star'}`}></i>
+            ))}
           </div>
-          <div className="feedback-summary">
-            <div className="average-rating">{averageRating}</div>
-            <div className="rating-stars">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <i
-                  key={star}
-                  className={`bi ${star <= Number(averageRating) ? "bi-star-fill" : "bi-star"
-                    }`}
-                ></i>
-              ))}
-            </div>
-          </div>
+          <span className="rating-label">Xếp hạng khóa học</span>
         </div>
 
-        <div className="row">
-          <div className={isAuthenticated ? "col-lg-8" : "col-lg-12"}>
-            <div className="feedback-list">
-              {reviews.map((review, index) => {
-                console.log("Review avatar:", review.avatar);
-                return (
-                  <div key={index} className="feedback-item">
-                    <img
-                      src={review.avatar || "https://via.placeholder.com/150"}
-                      alt={review.authorName}
-                      className="feedback-avatar"
-                    />
-                    <div className="feedback-content">
-                      <div className="feedback-user-name">
-                        {review.authorName}
-                        <span className="feedback-date">
-                          {new Date(review.date).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <div className="feedback-rating">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <i
-                            key={star}
-                            className={`bi ${star <= review.rating ? "bi-star-fill" : "bi-star"
-                              }`}
-                          ></i>
-                        ))}
-                      </div>
-                      <p className="feedback-text">{review.comment}</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {isAuthenticated && (
-            <div className="col-lg-4">
-              <div className="feedback-form">
-                <h3 className="form-title">
-                  {hasReviewed
-                    ? "Chỉnh sửa đánh giá của bạn"
-                    : "Viết đánh giá của bạn"}
-                </h3>
-                <div className="rating-input">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <i
-                      key={star}
-                      className={`bi ${star <= newRating ? "bi-star-fill" : "bi-star"
-                        } star-input ${star <= newRating ? "active" : ""}`}
-                      onClick={() => setNewRating(star)}
-                    ></i>
+        {/* Right: Bars */}
+        <div className="rating-bars-box">
+          {[5, 4, 3, 2, 1].map((star, idx) => (
+            <div key={star} className="bar-row">
+              <div className="progress-track">
+                <div
+                  className="progress-fill"
+                  style={{ width: `${ratingDistribution[idx]}%` }}
+                ></div>
+              </div>
+              <div className="bar-meta">
+                <div className="bar-stars">
+                  {[...Array(5)].map((_, i) => (
+                    <i key={i} className={`bi bi-star-fill ${i < star ? 'filled' : 'empty'}`}></i>
                   ))}
                 </div>
-                <textarea
-                  className="feedback-textarea"
-                  placeholder="Chia sẻ cảm nghĩ của bạn về khóa học..."
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                ></textarea>
-                <button
-                  className="btn-submit-feedback"
-                  onClick={handleSubmit}
-                  disabled={newRating === 0 || !newComment.trim()}
-                >
-                  {hasReviewed ? "Cập nhật đánh giá" : "Gửi đánh giá"}
-                </button>
+                <span className="bar-percent">{ratingDistribution[idx]}%</span>
               </div>
             </div>
-          )}
+          ))}
         </div>
       </div>
+
+      {/* Lists */}
+      <div className="feedback-list-container">
+        <div className="feedback-list">
+          {reviews.map((review, index) => (
+            <div key={index} className="review-card">
+              <div className="reviewer-info">
+                <div className="reviewer-avatar">
+                  {review.avatar ? <img src={review.avatar} alt={review.authorName} /> : review.authorName.charAt(0)}
+                </div>
+                <div className="reviewer-details">
+                  <div className="reviewer-name">{review.authorName}</div>
+                  <div className="review-meta">
+                    <div className="review-stars">
+                      {[1, 2, 3, 4, 5].map(s => <i key={s} className={`bi ${s <= review.rating ? 'bi-star-fill' : 'bi-star'}`}></i>)}
+                    </div>
+                    <span>• {new Date(review.date).toLocaleDateString()}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="review-text">
+                {review.comment}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Review Form - Always visible or conditional */}
+      {isAuthenticated && (
+        <div className="feedback-form-container">
+          <h3 className="form-title">{hasReviewed ? "Chỉnh sửa đánh giá" : "Viết đánh giá"}</h3>
+          <div className="rating-input">
+            {[1, 2, 3, 4, 5].map(s => (
+              <i
+                key={s}
+                className={`bi ${s <= newRating ? 'bi-star-fill' : 'bi-star'} star-input`}
+                onClick={() => setNewRating(s)}
+              ></i>
+            ))}
+          </div>
+          <textarea
+            className="feedback-textarea"
+            placeholder="Chia sẻ trải nghiệm..."
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+          />
+          <button className="btn-submit" onClick={handleSubmit}>
+            {hasReviewed ? "Cập nhật" : "Gửi đánh giá"}
+          </button>
+        </div>
+      )}
 
       <ToastContainer>
         {toasts.map((toast) => (

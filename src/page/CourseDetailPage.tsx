@@ -4,7 +4,6 @@ import { CourseModel } from "../model/CourseModel";
 import { getCourseDetail, getLessonById } from "../api/CourseAPI";
 import { PaymentModal } from "../components/common/PaymentModal";
 import { Toast, ToastContainer, ToastType } from "../components/common/Toast";
-import { StudentAvatarList } from "../components/common/StudentAvatarList";
 import { FeedbackSection } from "../components/common/FeedbackSection";
 import "../style/CourseDetailPage.css";
 import { useAuth } from "../context/AuthContext";
@@ -42,8 +41,6 @@ export default function CourseDetailPage() {
       setLoading(true);
       setError(null);
       const data = await getCourseDetail(slug);
-      console.log("data:", data);
-      console.log("isOwner:", data.isOwner);
       setCourse(data);
       if (data.sections && data.sections.length > 0) {
         setActiveSection(data.sections[0].sectionId);
@@ -143,222 +140,267 @@ export default function CourseDetailPage() {
     );
   }
 
+  // Helper to parse benefits
+  const benefitsList = course.benefits
+    ? course.benefits.split("\n").filter(item => item.trim() !== "")
+    : [];
+
+  const toggleSection = (sectionId: number) => {
+    setActiveSection(activeSection === sectionId ? null : sectionId);
+  };
+
   return (
     <div className="course-detail-page">
-      {/* Hero Section */}
-      <section className="course-hero">
-        <div className="container">
-          <div className="hero-card">
-            <div className="row align-items-center">
-              <div className="col-lg-7">
-                <h1 className="course-title">{course.title}</h1>
-                <p className="course-description">{course.description}</p>
+      <main className="course-container">
+        <div className="course-grid">
 
-                <div className="course-meta-info">
-                  <div className="meta-item">
-                    <i className="bi bi-person-circle"></i>
-                    <span>Giảng viên</span>
-                  </div>
-                  <div className="meta-item">
-                    <i className="bi bi-play-circle"></i>
-                    <span>{getTotalLessons()} bài học</span>
-                  </div>
-                  <div className="meta-item">
-                    <i className="bi bi-clock"></i>
-                    <span>{formatDuration(getTotalDuration())}</span>
-                  </div>
-                </div>
+          {/* Left Column: Course Content */}
+          <div className="main-content">
 
-                <div className="course-price-section">
-                  {course.discountPrice && course.discountPrice < course.price ? (
-                    <>
-                      <span className="price-original">
-                        {formatPrice(course.price)}
-                      </span>
-                      <span className="price-current">
-                        {formatPrice(course.discountPrice)}
-                      </span>
-                    </>
-                  ) : (
-                    <span className="price-current">
-                      {course.price === 0
-                        ? "Miễn phí"
-                        : formatPrice(course.price)}
-                    </span>
-                  )}
-                </div>
-
-                <StudentAvatarList courseId={course.courseId} />
-
-                <div className="course-actions">
-                  {!course.isOwner && (
-                    <button
-                      type="button"
-                      className="btn-enroll btn-primary"
-                      onClick={() => {
-                        if (!isAuthenticated) {
-                          navigate("/login", { state: { from: `/courses/${slug}` } });
-                          return;
-                        }
-
-                        if (course.price === 0) {
-                          navigate(`/courses/${slug}/learn`);
-                        } else {
-                          setShowPaymentModal(true);
-                        }
-                      }}
-                    >
-                      {course.price === 0 ? "Học ngay" : "Đăng ký ngay"}
-                    </button>
-                  )}
-                  <button className="btn-secondary">
-                    <i className="bi bi-heart"></i> Yêu thích
-                  </button>
-                </div>
+            {/* Header / Breadcrumbs */}
+            <div className="course-header">
+              <div className="breadcrumbs">
+                <a href="/courses" className="breadcrumb-link">Khóa học</a>
+                <span className="breadcrumb-separator">›</span>
+                <span className="breadcrumb-current">{course.title}</span>
               </div>
 
-              <div className="col-lg-5">
-                <div className="course-thumbnail-wrapper">
-                  <div className="course-thumbnail">
-                    {thumbnailSrc ? (
-                      <img src={thumbnailSrc} alt={course.title} />
-                    ) : (
-                      <div className="thumbnail-placeholder">
-                        <i className="bi bi-play-circle"></i>
+              <h1 className="course-title">{course.title}</h1>
+              <p className="course-description">{course.description}</p>
+
+              <div className="course-meta-row">
+                <span className="bestseller-badge">Bestseller</span>
+                <div className="rating-box">
+                  <span className="rating-score">4.8</span>
+                  <div className="rating-stars">
+                    {[1, 2, 3, 4, 5].map(i => <i key={i} className="bi bi-star-fill"></i>)}
+                  </div>
+                </div>
+                <a href="#reviews" className="breadcrumb-link">(12,300 đánh giá)</a>
+                <span className="stat-separator">•</span>
+                <span>205,000 học viên</span>
+              </div>
+
+              <div className="creator-info">
+                <span className="info-badge">
+                  Được tạo bởi <a href="#" className="creator-link">Giảng viên</a>
+                </span>
+                <span className="info-badge">
+                  <i className="bi bi-exclamation-circle-fill"></i> Cập nhật lần cuối {new Date(course.createdAt).toLocaleDateString("vi-VN")}
+                </span>
+                <span className="info-badge">
+                  <i className="bi bi-globe"></i> Tiếng Việt
+                </span>
+              </div>
+            </div>
+
+            {/* What you'll learn */}
+            {benefitsList.length > 0 && (
+              <div className="what-you-learn-box">
+                <h3 className="box-title">Bạn sẽ học được gì?</h3>
+                <div className="learn-grid">
+                  {benefitsList.map((item, idx) => (
+                    <div key={idx} className="learn-item">
+                      <i className="bi bi-check-lg"></i>
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Course Content Accordion */}
+            <div className="course-content-accordion">
+              <h3 className="content-section-title">Nội dung khóa học</h3>
+              <div className="content-stats">
+                <span>{course.sections?.length || 0} chương • {getTotalLessons()} bài học • Thời lượng {formatDuration(getTotalDuration())}</span>
+                <button className="expand-btn">Mở rộng tất cả</button>
+              </div>
+
+              <div className="accordion-container">
+                {course.sections?.sort((a, b) => a.sectionOrder - b.sectionOrder).map(section => (
+                  <div key={section.sectionId} className="accordion-item">
+                    <button
+                      className={`accordion-header ${activeSection !== section.sectionId ? 'collapsed' : ''}`}
+                      onClick={() => toggleSection(section.sectionId)}
+                    >
+                      <div className="accordion-title-row">
+                        <i className={`bi ${activeSection === section.sectionId ? 'bi-chevron-up' : 'bi-chevron-down'}`}></i>
+                        <span className="accordion-title">{section.title}</span>
+                      </div>
+                      <span className="section-meta">{section.lessons?.length || 0} bài học</span>
+                    </button>
+
+                    {activeSection === section.sectionId && (
+                      <div className="accordion-body">
+                        {section.lessons?.sort((a, b) => a.lessonOrder - b.lessonOrder).map(lesson => (
+                          <div key={lesson.lessonId} className="lesson-row">
+                            <div className="lesson-left">
+                              <i className={`bi ${lesson.lessonType === 'VIDEO' ? 'bi-play-circle-fill' : 'bi-file-text-fill'} lesson-icon`}></i>
+                              {lesson.isPreview ? (
+                                <a
+                                  href="#"
+                                  className="lesson-link"
+                                  onClick={(e) => { e.preventDefault(); handleLessonClick(lesson); }}
+                                >
+                                  {lesson.title}
+                                </a>
+                              ) : (
+                                <span>{lesson.title}</span>
+                              )}
+                            </div>
+                            <div className="lesson-right">
+                              {lesson.isPreview && <span className="badge-preview me-3">Xem trước</span>}
+                              <span className="lesson-duration">{formatDuration(lesson.durationSeconds)}</span>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>
-                </div>
+                ))}
               </div>
             </div>
-          </div>
-        </div>
-      </section>
 
-      {/* Course Content */}
-      <section className="course-content">
-        <div className="container">
-          <div className="row">
-            <div className="col-lg-8">
-              <h2 className="section-title">Nội dung khóa học</h2>
-
-              {course.sections && course.sections.length > 0 ? (
-                <div className="sections-list">
-                  {course.sections
-                    .sort((a, b) => a.sectionOrder - b.sectionOrder)
-                    .map((section) => (
-                      <div key={section.sectionId} className="section-card">
-                        <div
-                          className="section-header"
-                          onClick={() =>
-                            setActiveSection(
-                              activeSection === section.sectionId
-                                ? null
-                                : section.sectionId
-                            )
-                          }
-                        >
-                          <h3 className="section-card-title">
-                            {section.title}
-                          </h3>
-                          <i
-                            className={`bi ${activeSection === section.sectionId
-                              ? "bi-chevron-up"
-                              : "bi-chevron-down"
-                              }`}
-                          ></i>
-                        </div>
-
-                        {activeSection === section.sectionId &&
-                          section.lessons && (
-                            <div className="lessons-list">
-                              {section.lessons
-                                .sort((a, b) => a.lessonOrder - b.lessonOrder)
-                                .map((lesson) => (
-                                  <div
-                                    key={lesson.lessonId}
-                                    className="lesson-item"
-                                  >
-                                    <div
-                                      className={`lesson-info ${lesson.isPreview ? "clickable" : ""
-                                        }`}
-                                      onClick={() => handleLessonClick(lesson)}
-                                    >
-                                      <i className="bi bi-play-circle lesson-icon"></i>
-                                      <span className="lesson-title">
-                                        {lesson.title}
-                                      </span>
-
-                                      {lesson.isPreview && (
-                                        <span className="badge-preview">
-                                          Xem trước
-                                        </span>
-                                      )}
-                                    </div>
-                                    {lesson.durationSeconds && (
-                                      <span className="lesson-duration">
-                                        {formatDuration(lesson.durationSeconds)}
-                                      </span>
-                                    )}
-                                  </div>
-                                ))}
-                            </div>
-                          )}
-                      </div>
-                    ))}
-                </div>
-              ) : (
-                <p className="text-muted">Chưa có nội dung khóa học</p>
-              )}
-            </div>
-
-            <div className="col-lg-4">
-              <div className="course-sidebar">
-                <div className="sidebar-card">
-                  <h3>Thông tin khóa học</h3>
-                  <div className="info-item">
-                    <span className="info-label">Trạng thái:</span>
-                    <span
-                      className={`status-badge ${course.status.toLowerCase()}`}
-                    >
-                      {course.status}
-                    </span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Số bài học:</span>
-                    <span>{getTotalLessons()}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Thời lượng:</span>
-                    <span>{formatDuration(getTotalDuration())}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Thời gian học:</span>
-                    <span>{course.durationInMonths} tháng</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Ngày tạo:</span>
-                    <span>
-                      {new Date(course.createdAt).toLocaleDateString("vi-VN")}
-                    </span>
-                  </div>
+            {/* Instructor */}
+            <div className="instructor-section">
+              <h3 className="content-section-title">Giảng viên</h3>
+              <div className="instructor-profile">
+                <div className="instructor-avatar-placeholder" style={{ width: 80, height: 80, borderRadius: '50%', background: '#ccc' }}></div>
+                <div>
+                  <div className="instructor-name">Dr. Angela Yu</div>
+                  <div className="instructor-title">Developer and Lead Instructor</div>
                 </div>
               </div>
+              <div className="instructor-stats">
+                <div className="stat-item"><i className="bi bi-star-fill"></i> 4.7 Xếp hạng</div>
+                <div className="stat-item"><i className="bi bi-people-fill"></i> 500,000+ Học viên</div>
+                <div className="stat-item"><i className="bi bi-play-circle-fill"></i> 12 Khóa học</div>
+              </div>
+              <p className="instructor-bio">
+                I'm Angela, I am a developer with a passion for teaching. I'm the lead instructor at the London App Brewery, London's leading Programming Bootcamp.
+              </p>
+            </div>
+
+            {/* Reviews Section */}
+            <div id="reviews">
+              <h3 className="reviews-section-title">Đánh giá từ học viên</h3>
+              <FeedbackSection courseId={course.courseId} />
+            </div>
+
+          </div>
+
+          {/* Right Column: Sticky Sidebar */}
+          <div className="course-sidebar-wrapper">
+            <div className="sidebar-sticky">
+
+              {/* Video Preview */}
+              <div className="preview-card" onClick={() => navigate(`/courses/${slug}/learn`)}>
+                <div className="preview-overlay">
+                  <div className="play-button">
+                    <i className="bi bi-play-fill"></i>
+                  </div>
+                  <span className="preview-text">Xem trước khóa học này</span>
+                </div>
+                {thumbnailSrc ? (
+                  <img src={thumbnailSrc} className="preview-img" alt="Course Preview" />
+                ) : (
+                  <div style={{ width: '100%', height: '100%', background: '#333' }}></div>
+                )}
+              </div>
+
+              {/* Price & Actions */}
+              <div className="price-card">
+                <div className="price-row">
+                  {course.discountPrice && course.discountPrice < course.price ? (
+                    <>
+                      <span className="current-price">{formatPrice(course.discountPrice)}</span>
+                      <span className="original-price">{formatPrice(course.price)}</span>
+                      <span className="discount-badge">GIẢM 55%</span>
+                    </>
+                  ) : (
+                    <span className="current-price">{course.price === 0 ? "Miễn phí" : formatPrice(course.price)}</span>
+                  )}
+                </div>
+
+                <div className="action-buttons">
+                  {!course.isOwner ? (
+                    <>
+                      <button
+                        className="btn-add-cart"
+                        onClick={() => {
+                          if (!isAuthenticated) return navigate("/login", { state: { from: `/courses/${slug}` } });
+                          if (course.price === 0) navigate(`/courses/${slug}/learn`);
+                          else setShowPaymentModal(true);
+                        }}
+                      >
+                        Đăng ký ngay
+                      </button>
+                      <button className="btn-buy-now">Thêm vào giỏ hàng</button>
+                    </>
+                  ) : (
+                    <button className="btn-add-cart" onClick={() => navigate(`/courses/${slug}/learn`)}>Vào học ngay</button>
+                  )}
+                </div>
+
+                <p className="guarantee-text">Đảm bảo hoàn tiền trong 30 ngày</p>
+
+                <div className="includes-section">
+                  <h4 className="includes-title">Khóa học bao gồm:</h4>
+                  <div className="includes-list">
+                    <div className="include-item">
+                      <i className="bi bi-collection-play"></i>
+                      <span>{formatDuration(getTotalDuration())} video theo yêu cầu</span>
+                    </div>
+                    <div className="include-item">
+                      <i className="bi bi-file-earmark-code"></i>
+                      <span>{getTotalLessons()} bài học</span>
+                    </div>
+                    <div className="include-item">
+                      <i className="bi bi-phone"></i>
+                      <span>Truy cập trên thiết bị di động</span>
+                    </div>
+                    <div className="include-item">
+                      <i className="bi bi-infinity"></i>
+                      <span>Truy cập trọn đời</span>
+                    </div>
+                    <div className="include-item">
+                      <i className="bi bi-trophy"></i>
+                      <span>Chứng chỉ hoàn thành</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="share-links">
+                  <span>Chia sẻ</span>
+                  <span>Tặng khóa học này</span>
+                  <span>Nhập mã giảm giá</span>
+                </div>
+              </div>
+
+              {/* Business Ad */}
+              <div className="price-card">
+                <h4 className="box-title" style={{ fontSize: 18 }}>Đào tạo cho doanh nghiệp?</h4>
+                <p style={{ fontSize: 14, color: '#475569', marginBottom: 16 }}>
+                  Giúp đội ngũ của bạn truy cập hơn 25,000 khóa học hàng đầu bất kỳ lúc nào.
+                </p>
+                <button className="btn-buy-now" style={{ fontSize: 14, fontWeight: 700 }}>Dùng thử Business Plan</button>
+              </div>
+
             </div>
           </div>
+
         </div>
-      </section>
+      </main>
 
-      <FeedbackSection courseId={course.courseId} />
-
-      {/* Payment Modal */}
+      {/* Payment Modal and ToastContainer */}
       {course && (
         <PaymentModal
           course={course}
           isOpen={showPaymentModal}
           onClose={() => setShowPaymentModal(false)}
           onPayment={(discountCode, finalPrice) => {
-            console.log("Proceeding to payment with discount:", discountCode, "Price:", finalPrice);
+            // ...
             setShowPaymentModal(false);
             navigate("/payment", {
               state: {

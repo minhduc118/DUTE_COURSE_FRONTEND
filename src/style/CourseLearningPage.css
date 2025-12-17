@@ -104,7 +104,7 @@
 /* Main Content */
 .main-content {
   flex: 1;
-  padding: 24px;
+  /* padding: 24px; */
   overflow-y: auto;
   background: #fff;
 }
@@ -131,7 +131,8 @@
 .video-iframe-container {
   width: 100%;
   height: 0;
-  padding-bottom: 56.25%; /* 16:9 aspect ratio */
+  padding-bottom: 56.25%;
+  /* 16:9 aspect ratio */
   position: relative;
   border-radius: 12px;
   overflow: hidden;
@@ -579,4 +580,3 @@
     font-size: 24px;
   }
 }
-
