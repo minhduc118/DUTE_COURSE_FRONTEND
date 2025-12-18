@@ -130,37 +130,40 @@ export default function HomePage() {
 
   return (
     <div className="homepage-new">
-      <div className="max-w-7xl mx-auto space-y-10">
-
-        {/* HERO SECTION */}
-        <section className="hero-section">
-          <div className="hero-bg-texture"></div>
-          <div className="hero-content-wrapper">
-            <div className="hero-text-col">
-              <h2 className="hero-headline">Học lập trình để đi làm</h2>
-              <p className="hero-subline">
-                Thực hành dự án thực tế, lộ trình rõ ràng.<br />
-                Khóa học chất lượng cao dành cho người mới bắt đầu.
-              </p>
-              <button className="btn-hero-cta">Đăng ký ngay</button>
-            </div>
-            <div className="hero-visual-col">
-              <div className="hero-visual-card">
-                <div className="visual-deco deco-1"></div>
-                <div className="visual-deco deco-2"></div>
-                <button className="btn-visual-play">
-                  <i className="bi bi-play-fill"></i>
-                </button>
+      {/* HERO SECTION - Full Width */}
+      <section className="hero-section-wrapper full-width-wrapper">
+        <div className="content-container-fluid">
+          <div className="hero-section">
+            <div className="hero-bg-texture"></div>
+            <div className="hero-content-wrapper">
+              <div className="hero-text-col">
+                <h2 className="hero-headline">Học lập trình để đi làm</h2>
+                <p className="hero-subline">
+                  Thực hành dự án thực tế, lộ trình rõ ràng.<br />
+                  Khóa học chất lượng cao dành cho người mới bắt đầu.
+                </p>
+                <button className="btn-hero-cta">Đăng ký ngay</button>
               </div>
-              <div className="visual-dots">
-                <span className="dot active"></span>
-                <span className="dot"></span>
-                <span className="dot"></span>
+              <div className="hero-visual-col">
+                <div className="hero-visual-card">
+                  <div className="visual-deco deco-1"></div>
+                  <div className="visual-deco deco-2"></div>
+                  <button className="btn-visual-play">
+                    <i className="bi bi-play-fill"></i>
+                  </button>
+                </div>
+                <div className="visual-dots">
+                  <span className="dot active"></span>
+                  <span className="dot"></span>
+                  <span className="dot"></span>
+                </div>
               </div>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
+      <div className="content-container-fluid space-y-10 py-10">
         {/* PRO COURSES */}
         {!loading && proCourses.length > 0 && (
           <section>
@@ -176,7 +179,7 @@ export default function HomePage() {
 
         {/* FREE COURSES */}
         {!loading && freeCourses.length > 0 && (
-          <section className="pb-10">
+          <section>
             <div className="section-header">
               <h2 className="section-heading">Khóa học miễn phí</h2>
               <Link to="/roadmap" className="link-roadmap">Xem lộ trình</Link>

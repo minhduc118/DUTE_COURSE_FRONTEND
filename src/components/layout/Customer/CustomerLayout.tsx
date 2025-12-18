@@ -174,7 +174,6 @@ export default function CustomerLayout() {
             <Outlet />
           </div>
 
-          {/* Footer - Full Width but scrollable */}
           <Footer />
         </div>
       </main>

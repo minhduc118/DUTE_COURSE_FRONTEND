@@ -209,6 +209,16 @@ export default function CourseDetailPage() {
               </div>
             )}
 
+            {/* Course Introduction */}
+            {course.introduction && (
+              <div className="course-introduction-section">
+                <h3 className="content-section-title">Giới thiệu khóa học</h3>
+                <div className="introduction-content">
+                  {course.introduction}
+                </div>
+              </div>
+            )}
+
             {/* Course Content Accordion */}
             <div className="course-content-accordion">
               <h3 className="content-section-title">Nội dung khóa học</h3>
@@ -261,6 +271,7 @@ export default function CourseDetailPage() {
                 ))}
               </div>
             </div>
+
 
             {/* Instructor */}
             <div className="instructor-section">

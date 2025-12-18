@@ -20,7 +20,7 @@ export const Footer: React.FC = () => {
                 <div className="footer-gradient footer-gradient-2"></div>
             </div>
 
-            <div className="footer-content">
+            <div className="footer-content content-container-fluid">
                 {/* Main Footer Grid */}
                 <div className="footer-grid">
 
