@@ -221,11 +221,11 @@ export default function CourseDetailPage() {
 
   const renderLessonTypeIcon = (type: LessonType) => {
     switch (type) {
-      case LessonType.VIDEO: return <i className="bi bi-play-circle text-primary" title="Video"></i>;
-      case LessonType.READING: return <i className="bi bi-book text-info" title="Reading"></i>;
-      case LessonType.QUIZ: return <i className="bi bi-puzzle text-warning" title="Quiz"></i>;
-      case LessonType.CODING: return <i className="bi bi-code-square text-success" title="Coding"></i>;
-      default: return <i className="bi bi-question-circle"></i>;
+      case LessonType.VIDEO: return <i className="bi bi-play-circle-fill text-primary" title="Video"></i>;
+      case LessonType.READING: return <i className="bi bi-file-text-fill text-info" title="Reading"></i>;
+      case LessonType.QUIZ: return <i className="bi bi-question-circle-fill text-warning" title="Quiz"></i>;
+      case LessonType.CODING: return <i className="bi bi-terminal-fill text-success" title="Coding"></i>;
+      default: return <i className="bi bi-play-circle-fill"></i>;
     }
   };
 

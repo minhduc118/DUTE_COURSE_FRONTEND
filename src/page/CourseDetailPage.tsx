@@ -41,6 +41,7 @@ export default function CourseDetailPage() {
       setLoading(true);
       setError(null);
       const data = await getCourseDetail(slug);
+      console.log("Data course page details", data);
       setCourse(data);
       if (data.sections && data.sections.length > 0) {
         setActiveSection(data.sections[0].sectionId);
@@ -246,18 +247,19 @@ export default function CourseDetailPage() {
                         {section.lessons?.sort((a, b) => a.lessonOrder - b.lessonOrder).map(lesson => (
                           <div key={lesson.lessonId} className="lesson-row">
                             <div className="lesson-left">
-                              <i className={`bi ${lesson.lessonType === 'VIDEO' ? 'bi-play-circle-fill' : 'bi-file-text-fill'} lesson-icon`}></i>
-                              {lesson.isPreview ? (
-                                <a
-                                  href="#"
-                                  className="lesson-link"
-                                  onClick={(e) => { e.preventDefault(); handleLessonClick(lesson); }}
-                                >
-                                  {lesson.title}
-                                </a>
-                              ) : (
-                                <span>{lesson.title}</span>
-                              )}
+                              <i className={`bi lesson-icon ${lesson.lessonType === 'VIDEO' ? 'bi-play-circle-fill' :
+                                lesson.lessonType === 'READING' ? 'bi-file-text-fill' :
+                                  lesson.lessonType === 'QUIZ' ? 'bi-question-circle-fill' :
+                                    lesson.lessonType === 'CODING' ? 'bi-terminal-fill' :
+                                      'bi-play-circle-fill'
+                                }`}></i>
+                              <a
+                                href="#"
+                                className="lesson-link"
+                                onClick={(e) => { e.preventDefault(); handleLessonClick(lesson); }}
+                              >
+                                {lesson.title}
+                              </a>
                             </div>
                             <div className="lesson-right">
                               {lesson.isPreview && <span className="badge-preview me-3">Xem trước</span>}
