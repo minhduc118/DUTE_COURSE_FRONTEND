@@ -212,20 +212,26 @@ export default function CourseDetailPage() {
     }
   };
 
-  const renderLessonBadge = (lesson: LessonModel) => {
-    if (lesson.isPreview) {
-      return <span className="badge bg-info text-dark ms-2">Preview</span>;
-    }
-    return null;
+  // --- Render Helpers ---
+  const processThumbnail = (thumbnail: string | undefined) => {
+    if (!thumbnail) return "https://placehold.co/800x450?text=No+Cover";
+    return thumbnail.startsWith("data:")
+      ? thumbnail
+      : `data:image/png;base64,${thumbnail}`;
   };
 
-  const renderLessonTypeIcon = (type: LessonType) => {
+  const getLessonIcon = (type: LessonType) => {
     switch (type) {
-      case LessonType.VIDEO: return <i className="bi bi-play-circle-fill text-primary" title="Video"></i>;
-      case LessonType.READING: return <i className="bi bi-file-text-fill text-info" title="Reading"></i>;
-      case LessonType.QUIZ: return <i className="bi bi-question-circle-fill text-warning" title="Quiz"></i>;
-      case LessonType.CODING: return <i className="bi bi-terminal-fill text-success" title="Coding"></i>;
-      default: return <i className="bi bi-play-circle-fill"></i>;
+      case LessonType.VIDEO:
+        return <div className="w-8 h-8 rounded-lg bg-red-100 text-danger flex items-center justify-center shrink-0"><i className="bi bi-play-circle-fill fs-5"></i></div>;
+      case LessonType.READING:
+        return <div className="w-8 h-8 rounded-lg bg-blue-100 text-primary flex items-center justify-center shrink-0"><i className="bi bi-file-text-fill fs-5"></i></div>;
+      case LessonType.QUIZ:
+        return <div className="w-8 h-8 rounded-lg bg-amber-100 text-warning flex items-center justify-center shrink-0"><i className="bi bi-question-circle-fill fs-5"></i></div>;
+      case LessonType.CODING:
+        return <div className="w-8 h-8 rounded-lg bg-green-100 text-success flex items-center justify-center shrink-0"><i className="bi bi-terminal-fill fs-5"></i></div>;
+      default:
+        return <div className="w-8 h-8 rounded-lg bg-gray-100 text-secondary flex items-center justify-center shrink-0"><i className="bi bi-circle-fill fs-5"></i></div>;
     }
   };
 
@@ -252,250 +258,236 @@ export default function CourseDetailPage() {
     );
   }
 
-  const thumbnailSrc = course.thumbnailBase64
-    ? course.thumbnailBase64.startsWith("data:")
-      ? course.thumbnailBase64
-      : `data:image/png;base64,${course.thumbnailBase64}`
-    : null;
-
   return (
-    <div className="container-fluid py-4">
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <div className="d-flex align-items-center gap-2">
-          <button
-            className="btn btn-link text-decoration-none"
-            onClick={() => navigate(-1)}
-          >
-            <i className="bi bi-arrow-left me-2" />
-            Back
-          </button>
-          <h2 className="mb-0">Course Detail</h2>
+    <div className="container-fluid p-0">
+      {/* Breadcrumb & Header */}
+      <div className="space-y-4 mb-4">
+        <div className="d-flex items-center text-sm text-muted">
+          <span className="cursor-pointer hover-text-primary" onClick={() => navigate('/admin/dashboard')}>Home</span>
+          <i className="bi bi-chevron-right mx-2 text-xs"></i>
+          <span className="cursor-pointer hover-text-primary" onClick={() => navigate('/admin/products')}>Courses</span>
+          <i className="bi bi-chevron-right mx-2 text-xs"></i>
+          <span className="fw-medium text-dark">{course.title}</span>
+        </div>
+
+        <div className="d-flex items-center justify-content-between">
+          <div className="d-flex items-center gap-3">
+            <button
+              className="btn btn-light rounded-circle shadow-sm border d-flex align-items-center justify-content-center"
+              style={{ width: 40, height: 40 }}
+              onClick={() => navigate('/admin/products')}
+            >
+              <i className="bi bi-arrow-left"></i>
+            </button>
+            <h1 className="page-title mb-0">Course Detail</h1>
+          </div>
+          <div className="d-flex gap-2">
+            <button className="btn btn-outline-secondary d-flex align-items-center gap-2 bg-white">
+              <i className="bi bi-eye"></i> Preview
+            </button>
+            <button className="btn-primary-rose d-flex align-items-center gap-2">
+              <i className="bi bi-save"></i> Save Changes
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="card mb-4">
-        <div className="card-body row g-4">
-          <div className="col-md-4">
-            {thumbnailSrc ? (
+      {/* Course Info Card */}
+      <div className="admin-card p-0 overflow-hidden mb-4 border-0 shadow-sm rounded-4">
+        <div className="row g-0">
+          <div className="col-lg-4 p-4">
+            <div className="position-relative w-100 rounded-3 overflow-hidden shadow-sm group" style={{ aspectRatio: '16/9' }}>
               <img
-                src={thumbnailSrc}
+                src={processThumbnail(course.thumbnailBase64)}
                 alt={course.title}
-                className="img-fluid rounded"
-                style={{ maxHeight: "260px", objectFit: "cover" }}
+                className="w-100 h-100 object-fit-cover"
               />
-            ) : (
-              <div className="bg-light border rounded d-flex align-items-center justify-content-center h-100">
-                <span className="text-muted">No thumbnail</span>
-              </div>
-            )}
-          </div>
-          <div className="col-md-8">
-            <h3 className="fw-bold">{course.title}</h3>
-            <p className="text-muted mb-1">
-              <i className="bi bi-link-45deg me-1" />
-              {course.slug}
-            </p>
-            <p className="text-muted">
-              {course.description || "No description"}
-            </p>
-            <div className="mb-3">
-              <h6 className="text-muted">Introduction</h6>
-              <p className="text-muted" style={{ whiteSpace: "pre-line" }}>
-                {course.introduction || "No introduction"}
-              </p>
-            </div>
-            <div className="mb-3">
-              <h6 className="text-muted">Price</h6>
-              {course.discountPrice && course.discountPrice < course.price ? (
-                <div>
-                  <p className="fs-5 fw-semibold text-danger mb-1">
-                    {new Intl.NumberFormat("vi-VN", {
-                      style: "currency",
-                      currency: "VND",
-                    }).format(course.discountPrice)}
-                  </p>
-                  <p className="text-muted text-decoration-line-through mb-0">
-                    {new Intl.NumberFormat("vi-VN", {
-                      style: "currency",
-                      currency: "VND",
-                    }).format(course.price)}
-                  </p>
-                </div>
-              ) : (
-                <p className="fs-5 fw-semibold text-primary mb-0">
-                  {new Intl.NumberFormat("vi-VN", {
-                    style: "currency",
-                    currency: "VND",
-                  }).format(course.price)}
-                </p>
-              )}
-            </div>
-            <div className="d-flex gap-3">
-              <div>
-                <h6 className="text-muted mb-1">Status</h6>
-                <span className="badge bg-primary">{course.status}</span>
-              </div>
-              <div>
-                <h6 className="text-muted mb-1">Created At</h6>
-                <p className="mb-0">
-                  <i className="bi bi-calendar-event me-1" />
-                  {course.createdAt?.slice(0, 10)}
-                </p>
+              <div className="position-absolute bottom-0 start-0 m-3">
+                <span className="badge bg-primary shadow-sm">ID: #{course.courseId}</span>
               </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h4 className="mb-0">Sections & Lessons</h4>
-        <button className="btn btn-primary" onClick={openAddSectionModal}>
-          <i className="bi bi-plus-circle me-2" />
-          Add Section
-        </button>
-      </div>
-
-      {sortedSections.length === 0 && (
-        <div className="alert alert-info">
-          No sections yet. Start by adding one.
-        </div>
-      )}
-
-      {sortedSections.map((section) => {
-        const lessons = [...(section.lessons || [])].sort(
-          (a, b) => (a.lessonOrder ?? 0) - (b.lessonOrder ?? 0)
-        );
-        return (
-          <div className="card mb-3" key={section.sectionId}>
-            <div className="card-header d-flex justify-content-between align-items-center">
-              <div>
-                <span className="badge bg-secondary me-2">
-                  Order #{section.sectionOrder}
+          <div className="col-lg-8 p-4 ps-lg-0 d-flex flex-column justify-content-between">
+            <div>
+              <div className="d-flex align-items-center gap-3 mb-2">
+                <span className="badge bg-success-subtle text-success rounded-pill border border-success-subtle px-3">
+                  <span className="dot bg-success me-2 d-inline-block rounded-circle" style={{ width: 6, height: 6 }}></span>
+                  Active
                 </span>
-                <strong>{section.title}</strong>
+                <span className="small text-muted d-flex align-items-center gap-1">
+                  <i className="bi bi-link-45deg"></i> {course.slug}
+                </span>
               </div>
-              <div className="d-flex gap-2">
-                <button
-                  className="btn btn-sm btn-outline-success"
-                  onClick={() => openAddLessonModal(section)}
-                >
-                  <i className="bi bi-plus-circle me-1" />
-                  Add Lesson
-                </button>
-                <button
-                  className="btn btn-sm btn-outline-primary"
-                  onClick={() => openEditSectionModal(section)}
-                >
-                  <i className="bi bi-pencil me-1" />
-                  Edit
-                </button>
-                <button
-                  className="btn btn-sm btn-outline-danger"
-                  onClick={() => setSectionToDelete(section)}
-                >
-                  <i className="bi bi-trash me-1" />
-                  Delete
-                </button>
+              <h2 className="fw-bold text-dark mb-3">{course.title}</h2>
+              <div className="text-muted mb-4" style={{ maxWidth: '800px', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                {course.description || "No description provided."}
+              </div>
+
+              <div className="d-flex flex-wrap gap-4 pt-4 border-top">
+                <div className="d-flex align-items-center gap-2">
+                  <i className="bi bi-calendar3 fs-5 text-muted"></i>
+                  <div>
+                    <div className="small text-muted">Created</div>
+                    <div className="fw-medium text-dark">{course.createdAt ? new Date(course.createdAt).toLocaleDateString() : 'N/A'}</div>
+                  </div>
+                </div>
+                <div className="d-flex align-items-center gap-2">
+                  <i className="bi bi-clock fs-5 text-muted"></i>
+                  <div>
+                    <div className="small text-muted">Duration</div>
+                    <div className="fw-medium text-dark">{course.durationInMonths ? `${course.durationInMonths} months` : 'N/A'}</div>
+                  </div>
+                </div>
+                <div className="d-flex align-items-center gap-2">
+                  <i className="bi bi-person fs-5 text-muted"></i>
+                  <div>
+                    <div className="small text-muted">Author</div>
+                    <div className="fw-medium text-dark">Admin</div>
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="card-body">
-              {lessons.length === 0 ? (
-                <p className="text-muted mb-0">No lessons in this section.</p>
-              ) : (
-                <div className="table-responsive">
-                  <table className="table table-sm align-middle mb-0">
-                    <thead className="table-light">
-                      <tr>
-                        <th style={{ width: "60px" }}>Order</th>
-                        <th style={{ width: "50px" }}>Type</th>
-                        <th>Title</th>
-                        <th>Content/URL</th>
-                        <th style={{ width: "100px" }}>Duration</th>
-                        <th style={{ width: "200px" }}>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {lessons.map((lesson) => (
-                        <tr key={lesson.lessonId}>
-                          <td>
-                            <span className="badge bg-secondary">
-                              #{lesson.lessonOrder}
+
+            <div className="mt-4 mt-lg-0 d-flex justify-content-end align-items-end">
+              <div className="text-end">
+                <div className="small text-muted fw-bold text-uppercase mb-1">Price</div>
+                <div className="d-flex align-items-baseline gap-2 justify-content-end">
+                  <span className="fs-2 fw-bold" style={{ color: 'var(--primary-rose)' }}>{course.price?.toLocaleString()} ₫</span>
+                  {course.discountPrice && (
+                    <span className="fs-5 text-muted text-decoration-line-through">{course.discountPrice.toLocaleString()} ₫</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Curriculum Section */}
+      <div className="d-flex flex-column gap-4">
+        <div className="d-flex align-items-center justify-content-between">
+          <h3 className="fs-4 fw-bold text-dark d-flex align-items-center gap-2 m-0">
+            <i className="bi bi-layers text-primary"></i> Curriculum
+          </h3>
+          <button className="btn btn-primary d-flex align-items-center gap-2" onClick={openAddSectionModal}>
+            <i className="bi bi-plus-lg"></i> Add Section
+          </button>
+        </div>
+
+        {sortedSections.length === 0 ? (
+          <div className="text-center py-5 border rounded-3 bg-white border-dashed">
+            <i className="bi bi-layers text-muted fs-1 mb-3 d-block"></i>
+            <h5 className="text-muted">No sections yet</h5>
+            <p className="text-muted small">Start building your course curriculum by adding sections.</p>
+            <button className="btn btn-outline-primary mt-2" onClick={openAddSectionModal}>
+              Add First Section
+            </button>
+          </div>
+        ) : (
+          <div className="d-flex flex-column gap-3">
+            {sortedSections.map((section) => {
+              const lessons = [...(section.lessons || [])].sort(
+                (a, b) => (a.lessonOrder ?? 0) - (b.lessonOrder ?? 0)
+              );
+              return (
+                <div key={section.sectionId} className="admin-card p-0 border shadow-sm rounded-3 overflow-hidden">
+                  {/* Section Header */}
+                  <div className="bg-light px-4 py-3 border-bottom d-flex align-items-center justify-content-between group">
+                    <div className="d-flex align-items-center gap-3">
+                      <i className="bi bi-grip-vertical text-muted cursor-move fs-5"></i>
+                      <h5 className="m-0 fw-bold">{section.title}</h5>
+                      <span className="badge bg-secondary-subtle text-secondary border">Order #{section.sectionOrder}</span>
+                    </div>
+                    <div className="d-flex align-items-center gap-2">
+                      <div className="text-muted small me-3">{lessons.length} Lessons</div>
+                      <button className="btn btn-sm btn-icon btn-outline-secondary border-0" title="Edit" onClick={() => openEditSectionModal(section)}>
+                        <i className="bi bi-pencil"></i>
+                      </button>
+                      <button className="btn btn-sm btn-icon btn-outline-danger border-0" title="Delete" onClick={() => setSectionToDelete(section)}>
+                        <i className="bi bi-trash"></i>
+                      </button>
+                      <div className="vr mx-2"></div>
+                      <button className="btn btn-sm btn-primary-soft text-primary fw-medium" onClick={() => openAddLessonModal(section)}>
+                        <i className="bi bi-plus-circle me-1"></i> Add Lesson
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Lesson List */}
+                  <div className="divide-y">
+                    {lessons.length === 0 ? (
+                      <div className="p-4 text-center text-muted small fst-italic">
+                        No lessons in this section. Click "Add Lesson" to create content.
+                      </div>
+                    ) : (
+                      lessons.map((lesson) => (
+                        <div key={lesson.lessonId} className="px-4 py-3 d-flex align-items-center justify-content-between hover-bg-light transition-all border-bottom border-light">
+                          <div className="d-flex align-items-center gap-4 flex-grow-1">
+                            <span className="text-muted font-monospace small" style={{ width: 24 }}>#{lesson.lessonOrder}</span>
+                            {getLessonIcon(lesson.lessonType)}
+                            <div>
+                              <div className="fw-medium text-dark d-flex align-items-center gap-2">
+                                {lesson.title}
+                                {lesson.isPreview && <span className="badge bg-info-subtle text-info border border-info-subtle text-uppercase" style={{ fontSize: 9 }}>Preview</span>}
+                              </div>
+                              <div className="small text-muted">
+                                {lesson.lessonType === LessonType.VIDEO ? (
+                                  <a href={lesson.youtubeUrl} target="_blank" rel="noreferrer" className="text-primary text-decoration-none">
+                                    <i className="bi bi-youtube me-1"></i> Video Link
+                                  </a>
+                                ) : lesson.lessonType === LessonType.READING ? (
+                                  <span><i className="bi bi-text-paragraph me-1"></i> Text Content</span>
+                                ) : (
+                                  <span className="text-warning-emphasis"><i className="bi bi-tools me-1"></i> Interactive Content</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="d-flex align-items-center gap-4">
+                            <span className="badge bg-light text-muted border">
+                              {lesson.durationSeconds ? `${Math.floor(lesson.durationSeconds / 60)}m ${lesson.durationSeconds % 60}s` : '--'}
                             </span>
-                          </td>
-                          <td className="text-center fs-5">
-                            {renderLessonTypeIcon(lesson.lessonType)}
-                          </td>
-                          <td>
-                            {lesson.title}
-                            {renderLessonBadge(lesson)}
-                          </td>
-                          <td>
-                            {lesson.lessonType === LessonType.VIDEO ? (
-                              <a href={lesson.youtubeUrl} target="_blank" rel="noreferrer" className="text-truncate d-inline-block" style={{ maxWidth: '200px' }}>
-                                {lesson.youtubeUrl}
-                              </a>
-                            ) : lesson.lessonType === LessonType.READING ? (
-                              <span className="text-muted fst-italic">Text Content</span>
-                            ) : (
-                              <span className="text-muted small">Configured via Builder</span>
-                            )}
-                          </td>
-                          <td>
-                            {lesson.durationSeconds
-                              ? `${lesson.durationSeconds}s`
-                              : "null"}
-                          </td>
-                          <td>
-                            <div className="d-flex gap-2">
+                            <div className="d-flex align-items-center gap-1">
                               {(lesson.lessonType === LessonType.QUIZ || lesson.lessonType === LessonType.CODING) && (
-                                <button
-                                  className="btn btn-sm btn-outline-warning"
-                                  onClick={() => openBuilder(lesson)}
-                                  title="Configure Content"
-                                >
-                                  <i className="bi bi-gear-fill" />
+                                <button className="btn btn-sm btn-icon text-warning bg-warning-subtle" onClick={() => openBuilder(lesson)} title="Builder">
+                                  <i className="bi bi-gear-fill"></i>
                                 </button>
                               )}
-                              <button
-                                className="btn btn-sm btn-outline-primary"
-                                onClick={() =>
-                                  openEditLessonModal(section, lesson)
-                                }
-                                title="Edit Metadata"
-                              >
-                                <i className="bi bi-pencil" />
+                              <button className="btn btn-sm btn-icon text-secondary hover-text-primary" onClick={() => openEditLessonModal(section, lesson)} title="Edit">
+                                <i className="bi bi-pencil"></i>
                               </button>
-                              <button
-                                className="btn btn-sm btn-outline-danger"
-                                onClick={() => setLessonToDelete(lesson)}
-                                title="Delete Lesson"
-                              >
-                                <i className="bi bi-trash" />
+                              <button className="btn btn-sm btn-icon text-secondary hover-text-danger" onClick={() => setLessonToDelete(lesson)} title="Delete">
+                                <i className="bi bi-trash"></i>
                               </button>
                             </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </div>
-              )}
-            </div>
+              );
+            })}
           </div>
-        );
-      })}
+        )}
+      </div>
 
+      {/* Modals remain mostly unchanged in logic but wrapped if needed. 
+          The previous implementation of modals was already at the end of the return. 
+          I will retain them here.
+      */}
       {/* Section Modal */}
       {sectionModalOpen && (
         <div
           className="modal show d-block"
           style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
         >
-          <div className="modal-dialog">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">
-                  {editingSection ? "Edit Section" : "Add Section"}
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content border-0 shadow-lg">
+              <div className="modal-header border-bottom-0 pb-0">
+                <h5 className="modal-title fw-bold">
+                  {editingSection ? "Edit Section" : "Add New Section"}
                 </h5>
                 <button
                   type="button"
@@ -509,10 +501,11 @@ export default function CourseDetailPage() {
               <form onSubmit={handleSectionFormSubmit}>
                 <div className="modal-body">
                   <div className="mb-3">
-                    <label className="form-label">Title *</label>
+                    <label className="form-label text-muted small fw-bold">SECTION TITLE</label>
                     <input
                       type="text"
                       className="form-control"
+                      placeholder="e.g., Introduction to Java"
                       value={sectionForm.title}
                       onChange={(e) =>
                         setSectionForm({
@@ -524,7 +517,7 @@ export default function CourseDetailPage() {
                     />
                   </div>
                   <div className="mb-3">
-                    <label className="form-label">Order *</label>
+                    <label className="form-label text-muted small fw-bold">ORDER PRIORITY</label>
                     <input
                       type="number"
                       min={1}
@@ -540,10 +533,10 @@ export default function CourseDetailPage() {
                     />
                   </div>
                 </div>
-                <div className="modal-footer">
+                <div className="modal-footer border-top-0 pt-0">
                   <button
                     type="button"
-                    className="btn btn-secondary"
+                    className="btn btn-light text-muted"
                     onClick={() => {
                       setSectionModalOpen(false);
                       setEditingSection(null);
@@ -551,9 +544,8 @@ export default function CourseDetailPage() {
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-primary">
-                    <i className="bi bi-check-circle me-2" />
-                    {editingSection ? "Update Section" : "Create Section"}
+                  <button type="submit" className="btn btn-primary px-4">
+                    {editingSection ? "Save Changes" : "Create Section"}
                   </button>
                 </div>
               </form>
@@ -568,11 +560,11 @@ export default function CourseDetailPage() {
           className="modal show d-block"
           style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
         >
-          <div className="modal-dialog">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">
-                  {editingLesson ? "Edit Lesson" : "Add Lesson"}
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content border-0 shadow-lg">
+              <div className="modal-header border-bottom-0 pb-0">
+                <h5 className="modal-title fw-bold">
+                  {editingLesson ? "Edit Lesson" : "Add New Lesson"}
                 </h5>
                 <button
                   type="button"
@@ -586,94 +578,56 @@ export default function CourseDetailPage() {
               </div>
               <form onSubmit={handleLessonFormSubmit}>
                 <div className="modal-body">
-                  <div className="mb-3">
-                    <label className="form-label">Lesson Type *</label>
-                    <select
-                      className="form-select"
-                      value={lessonForm.lessonType}
-                      onChange={(e) =>
-                        setLessonForm({
-                          ...lessonForm,
-                          lessonType: e.target.value as LessonType,
-                        })
-                      }
-                      required
-                    >
-                      <option value={LessonType.VIDEO}>Video</option>
-                      <option value={LessonType.READING}>Reading</option>
-                      <option value={LessonType.QUIZ}>Quiz</option>
-                      <option value={LessonType.CODING}>Coding</option>
-                    </select>
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">Title *</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={lessonForm.title}
-                      onChange={(e) =>
-                        setLessonForm({ ...lessonForm, title: e.target.value })
-                      }
-                      required
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">Order *</label>
-                    <input
-                      type="number"
-                      min={1}
-                      className="form-control"
-                      value={lessonForm.lessonOrder}
-                      onChange={(e) =>
-                        setLessonForm({
-                          ...lessonForm,
-                          lessonOrder: e.target.value,
-                        })
-                      }
-                      required
-                    />
-                  </div>
-
-                  {/* Conditional Fields based on Lesson Type */}
-                  {lessonForm.lessonType === LessonType.VIDEO && (
-                    <div className="mb-3">
-                      <label className="form-label">Youtube URL *</label>
+                  <div className="row g-3">
+                    <div className="col-12">
+                      <label className="form-label text-muted small fw-bold">LESSON TYPE</label>
+                      <select
+                        className="form-select"
+                        value={lessonForm.lessonType}
+                        onChange={(e) =>
+                          setLessonForm({
+                            ...lessonForm,
+                            lessonType: e.target.value as LessonType,
+                          })
+                        }
+                        required
+                      >
+                        <option value={LessonType.VIDEO}>Video Lesson</option>
+                        <option value={LessonType.READING}>Reading Material</option>
+                        <option value={LessonType.QUIZ}>Quiz / Assessment</option>
+                        <option value={LessonType.CODING}>Coding Exercise</option>
+                      </select>
+                    </div>
+                    <div className="col-12">
+                      <label className="form-label text-muted small fw-bold">TITLE</label>
                       <input
-                        type="url"
+                        type="text"
                         className="form-control"
-                        value={lessonForm.youtubeUrl}
+                        value={lessonForm.title}
+                        onChange={(e) =>
+                          setLessonForm({ ...lessonForm, title: e.target.value })
+                        }
+                        required
+                      />
+                    </div>
+                    <div className="col-4">
+                      <label className="form-label text-muted small fw-bold">ORDER</label>
+                      <input
+                        type="number"
+                        min={1}
+                        className="form-control"
+                        value={lessonForm.lessonOrder}
                         onChange={(e) =>
                           setLessonForm({
                             ...lessonForm,
-                            youtubeUrl: e.target.value,
+                            lessonOrder: e.target.value,
                           })
                         }
                         required
                       />
                     </div>
-                  )}
-
-                  {lessonForm.lessonType === LessonType.READING && (
-                    <div className="mb-3">
-                      <label className="form-label">Reading Content *</label>
-                      <textarea
-                        className="form-control"
-                        rows={6}
-                        value={lessonForm.readingContent}
-                        onChange={(e) =>
-                          setLessonForm({
-                            ...lessonForm,
-                            readingContent: e.target.value,
-                          })
-                        }
-                        required
-                      />
-                    </div>
-                  )}
-
-                  {(lessonForm.lessonType === LessonType.VIDEO || lessonForm.lessonType === LessonType.READING) && (
-                    <div className="mb-3">
-                      <label className="form-label">Duration (seconds)</label>
+                    <div className="col-8">
+                      <label className="form-label text-muted small fw-bold">DURATION (SEC)</label>
                       <input
                         type="number"
                         min={0}
@@ -687,33 +641,71 @@ export default function CourseDetailPage() {
                         }
                       />
                     </div>
-                  )}
 
-                  <div className="form-check form-switch">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      id="lessonPreviewSwitch"
-                      checked={lessonForm.isPreview}
-                      onChange={(e) =>
-                        setLessonForm({
-                          ...lessonForm,
-                          isPreview: e.target.checked,
-                        })
-                      }
-                    />
-                    <label
-                      className="form-check-label"
-                      htmlFor="lessonPreviewSwitch"
-                    >
-                      Mark as preview lesson
-                    </label>
+                    {/* Conditional Fields */}
+                    {lessonForm.lessonType === LessonType.VIDEO && (
+                      <div className="col-12">
+                        <label className="form-label text-muted small fw-bold">YOUTUBE URL</label>
+                        <input
+                          type="url"
+                          className="form-control"
+                          placeholder="https://youtube.com/watch?v=..."
+                          value={lessonForm.youtubeUrl}
+                          onChange={(e) =>
+                            setLessonForm({
+                              ...lessonForm,
+                              youtubeUrl: e.target.value,
+                            })
+                          }
+                          required
+                        />
+                      </div>
+                    )}
+
+                    {lessonForm.lessonType === LessonType.READING && (
+                      <div className="col-12">
+                        <label className="form-label text-muted small fw-bold">CONTENT</label>
+                        <textarea
+                          className="form-control"
+                          rows={5}
+                          value={lessonForm.readingContent}
+                          onChange={(e) =>
+                            setLessonForm({
+                              ...lessonForm,
+                              readingContent: e.target.value,
+                            })
+                          }
+                          required
+                        />
+                      </div>
+                    )}
+
+                    <div className="col-12">
+                      <div className="form-check form-switch bg-light p-3 rounded border">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          id="lessonPreviewSwitch"
+                          checked={lessonForm.isPreview}
+                          onChange={(e) =>
+                            setLessonForm({
+                              ...lessonForm,
+                              isPreview: e.target.checked,
+                            })
+                          }
+                        />
+                        <label className="form-check-label fw-medium mx-2" htmlFor="lessonPreviewSwitch">
+                          Allow Free Preview
+                        </label>
+                        <div className="text-muted small ms-2">If enabled, users can view this lesson without purchasing.</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div className="modal-footer">
+                <div className="modal-footer border-top-0 pt-0">
                   <button
                     type="button"
-                    className="btn btn-secondary"
+                    className="btn btn-light text-muted"
                     onClick={() => {
                       setLessonModalOpen(false);
                       setEditingLesson(null);
@@ -722,9 +714,8 @@ export default function CourseDetailPage() {
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-primary">
-                    <i className="bi bi-check-circle me-2" />
-                    {editingLesson ? "Update Lesson" : "Create Lesson"}
+                  <button type="submit" className="btn btn-primary px-4">
+                    {editingLesson ? "Save Lesson" : "Add Lesson"}
                   </button>
                 </div>
               </form>
@@ -739,9 +730,9 @@ export default function CourseDetailPage() {
           className="modal show d-block"
           style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
         >
-          <div className="modal-dialog">
-            <div className="modal-content">
-              <div className="modal-header bg-danger text-white">
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content border-0 shadow-lg">
+              <div className="modal-header bg-danger text-white border-bottom-0">
                 <h5 className="modal-title">Delete Section</h5>
                 <button
                   type="button"
@@ -749,26 +740,28 @@ export default function CourseDetailPage() {
                   onClick={() => setSectionToDelete(null)}
                 />
               </div>
-              <div className="modal-body">
-                <p>
-                  Are you sure you want to delete section{" "}
-                  <strong>{sectionToDelete.title}</strong>?
-                </p>
+              <div className="modal-body p-4 text-center">
+                <div className="mb-3">
+                  <div className="bg-danger-subtle text-danger rounded-circle d-inline-flex p-3">
+                    <i className="bi bi-exclamation-triangle-fill fs-3"></i>
+                  </div>
+                </div>
+                <h5 className="fw-bold mb-2">Are you sure?</h5>
                 <p className="text-muted mb-0">
-                  All lessons belonging to this section will also be removed.
+                  You are about to delete <strong>"{sectionToDelete.title}"</strong>. All lessons inside this section will be permanently removed.
                 </p>
               </div>
-              <div className="modal-footer">
+              <div className="modal-footer border-top-0 justify-content-center pb-4">
                 <button
                   type="button"
-                  className="btn btn-secondary"
+                  className="btn btn-light px-4"
                   onClick={() => setSectionToDelete(null)}
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
-                  className="btn btn-danger"
+                  className="btn btn-danger px-4"
                   onClick={async () => {
                     if (sectionToDelete?.sectionId) {
                       await removeSection(sectionToDelete.sectionId);
@@ -776,8 +769,7 @@ export default function CourseDetailPage() {
                     setSectionToDelete(null);
                   }}
                 >
-                  <i className="bi bi-trash me-2" />
-                  Delete
+                  Yes, Delete it
                 </button>
               </div>
             </div>
@@ -791,9 +783,9 @@ export default function CourseDetailPage() {
           className="modal show d-block"
           style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
         >
-          <div className="modal-dialog">
-            <div className="modal-content">
-              <div className="modal-header bg-danger text-white">
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content border-0 shadow-lg">
+              <div className="modal-header bg-danger text-white border-bottom-0">
                 <h5 className="modal-title">Delete Lesson</h5>
                 <button
                   type="button"
@@ -801,24 +793,28 @@ export default function CourseDetailPage() {
                   onClick={() => setLessonToDelete(null)}
                 />
               </div>
-              <div className="modal-body">
-                <p>
-                  Are you sure you want to delete lesson{" "}
-                  <strong>{lessonToDelete.title}</strong>?
+              <div className="modal-body p-4 text-center">
+                <div className="mb-3">
+                  <div className="bg-danger-subtle text-danger rounded-circle d-inline-flex p-3">
+                    <i className="bi bi-trash-fill fs-3"></i>
+                  </div>
+                </div>
+                <h5 className="fw-bold mb-2">Delete this lesson?</h5>
+                <p className="text-muted">
+                  <strong>"{lessonToDelete.title}"</strong> will be removed forever.
                 </p>
-                <p className="text-muted mb-0">This action cannot be undone.</p>
               </div>
-              <div className="modal-footer">
+              <div className="modal-footer border-top-0 justify-content-center pb-4">
                 <button
                   type="button"
-                  className="btn btn-secondary"
+                  className="btn btn-light px-4"
                   onClick={() => setLessonToDelete(null)}
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
-                  className="btn btn-danger"
+                  className="btn btn-danger px-4"
                   onClick={async () => {
                     if (lessonToDelete?.lessonId) {
                       await removeLesson(lessonToDelete.lessonId);
@@ -826,39 +822,37 @@ export default function CourseDetailPage() {
                     setLessonToDelete(null);
                   }}
                 >
-                  <i className="bi bi-trash me-2" />
-                  Delete
+                  Delete Lesson
                 </button>
               </div>
             </div>
           </div>
         </div>
       )}
-      {/* Quiz Builder Modal */}
-      {showQuizBuilder && currentLessonForBuilder && (
+
+      {/* Builders */}
+      {currentLessonForBuilder && showQuizBuilder && (
         <QuizBuilderModal
-          lesson={currentLessonForBuilder}
           onClose={() => {
             setShowQuizBuilder(false);
             setCurrentLessonForBuilder(null);
           }}
+          lesson={currentLessonForBuilder}
           onSuccess={() => {
-            // Optionally refresh course data or show success message
-            alert("Quiz saved successfully!");
+            // Refresh logic if needed, currently just closes
           }}
         />
       )}
 
-      {/* Coding Builder Modal */}
-      {showCodingBuilder && currentLessonForBuilder && (
+      {currentLessonForBuilder && showCodingBuilder && (
         <CodingBuilderModal
-          lesson={currentLessonForBuilder}
           onClose={() => {
             setShowCodingBuilder(false);
             setCurrentLessonForBuilder(null);
           }}
+          lesson={currentLessonForBuilder}
           onSuccess={() => {
-            alert("Coding exercise saved successfully!");
+            // Refresh logic if needed
           }}
         />
       )}
