@@ -4,7 +4,7 @@ import { CourseModel, SectionModel, LessonModel, LessonType } from "../model/Cou
 import { getCourseDetail } from "../api/CourseAPI";
 
 // Modular Components
-import { LearningHeader, LearningSidebar, ReadingLesson, VideoLesson } from "../components/learning";
+import { LearningHeader, LearningSidebar, ReadingLesson, VideoLesson, QuizLesson, CodingLesson } from "../components/learning";
 
 import "../style/CourseLearningPage.css";
 
@@ -219,16 +219,38 @@ export default function CourseLearningPage() {
               nextLesson={nextLesson}
               onLessonClick={handleLessonClick}
             />
+          ) : currentLesson?.lessonType === LessonType.QUIZ ? (
+            <QuizLesson
+              currentLesson={currentLesson}
+              course={course}
+              currentSection={currentSection}
+              onToggleComplete={toggleComplete}
+              prevLesson={prevLesson}
+              nextLesson={nextLesson}
+              onLessonClick={handleLessonClick}
+            />
           ) : (
             currentLesson && (
-              <VideoLesson
-                currentLesson={currentLesson}
-                currentSection={currentSection}
-                activeTab={activeTab}
-                onTabChange={setActiveTab}
-                nextLesson={nextLesson}
-                onLessonClick={handleLessonClick}
-              />
+              currentLesson.lessonType === LessonType.CODING ? (
+                <CodingLesson
+                  currentLesson={currentLesson}
+                  course={course}
+                  currentSection={currentSection}
+                  onToggleComplete={toggleComplete}
+                  prevLesson={prevLesson}
+                  nextLesson={nextLesson}
+                  onLessonClick={handleLessonClick}
+                />
+              ) : (
+                <VideoLesson
+                  currentLesson={currentLesson}
+                  currentSection={currentSection}
+                  activeTab={activeTab}
+                  onTabChange={setActiveTab}
+                  nextLesson={nextLesson}
+                  onLessonClick={handleLessonClick}
+                />
+              )
             )
           )}
         </main>
