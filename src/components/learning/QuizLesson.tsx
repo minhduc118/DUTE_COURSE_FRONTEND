@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { LessonModel, CourseModel, SectionModel } from "../../model/CourseModel";
+import { getQuizByLessonId } from "../../api/QuizAPI";
 
 interface QuizLessonProps {
     currentLesson: LessonModel;
@@ -19,8 +20,10 @@ export const QuizLesson: React.FC<QuizLessonProps> = ({
     onLessonClick,
 }) => {
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-    const [selectedOption, setSelectedOption] = useState<string | null>(null);
+    const [selectedOption, setSelectedOption] = useState<number | null>(null);
     const [timeLeft, setTimeLeft] = useState(600); // 10 minutes default
+    const [quizData, setQuizData] = useState<any | null>(null);
+    const [loading, setLoading] = useState(true);
 
     // Timer logic
     useEffect(() => {
@@ -31,79 +34,31 @@ export const QuizLesson: React.FC<QuizLessonProps> = ({
         return () => clearInterval(timer);
     }, [timeLeft]);
 
+    useEffect(() => {
+        const fetchQuiz = async () => {
+            if (!currentLesson?.lessonId) return;
+            try {
+                setLoading(true);
+                const data = await getQuizByLessonId(currentLesson.lessonId);
+                setQuizData(data);
+            } catch (error) {
+                console.error("Failed to load quiz", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchQuiz();
+    }, [currentLesson?.lessonId]);
+
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
 
-    // Full Mock Quiz Data
-    const mockQuestions = [
-        {
-            id: 1,
-            number: 1,
-            content: "JavaScript is a ___ language?",
-            code: null,
-            options: [
-                { id: "A", text: "Object-Oriented", subtext: "" },
-                { id: "B", text: "Object-Based", subtext: "" },
-                { id: "C", text: "Procedural", subtext: "" },
-                { id: "D", text: "None of the above", subtext: "" }
-            ]
-        },
-        {
-            id: 2,
-            number: 2,
-            content: "Which of the following keywords is used to define a variable in Javascript?",
-            code: null,
-            options: [
-                { id: "A", text: "var", subtext: "" },
-                { id: "B", text: "let", subtext: "" },
-                { id: "C", text: "Both A and B", subtext: "" },
-                { id: "D", text: "None of the above", subtext: "" }
-            ]
-        },
-        {
-            id: 3,
-            number: 3,
-            content: "Consider the following code snippet. What will be the output logged to the console when this function is executed?",
-            code: `function checkScope() {
-  var i = "function scope";
-  if (true) {
-    let i = "block scope";
-    console.log("Block i: ", i);
-  }
-  console.log("Function i: ", i);
-}
-checkScope();`,
-            options: [
-                { id: "A", text: "Block i: function scope, Function i: block scope", subtext: "Variables declared with var ignore block scope." },
-                { id: "B", text: "Block i: block scope, Function i: function scope", subtext: "Variables declared with let are block-scoped." },
-                { id: "C", text: "Block i: block scope, Function i: block scope", subtext: "" },
-                { id: "D", text: "Syntax Error", subtext: "You cannot redeclare variable i in the same scope." }
-            ]
-        },
-        {
-            id: 4,
-            number: 4,
-            content: "What will be the output of the following code snippet?",
-            code: `(function(){
-  setTimeout(()=> console.log(1),2000);
-  console.log(2);
-  setTimeout(()=> console.log(3),0);
-  console.log(4);
-})();`,
-            options: [
-                { id: "A", text: "1 2 3 4", subtext: "" },
-                { id: "B", text: "2 4 3 1", subtext: "Event Loop mechanism." },
-                { id: "C", text: "2 4 1 3", subtext: "" },
-                { id: "D", text: "2 1 4 3", subtext: "" }
-            ]
-        }
-    ];
-
-    const currentQuestion = mockQuestions[currentQuestionIndex];
-    const isLastQuestion = currentQuestionIndex === mockQuestions.length - 1;
+    const questions = quizData?.questions || [];
+    const currentQuestion = questions[currentQuestionIndex];
+    const isLastQuestion = currentQuestionIndex === questions.length - 1;
 
     const handleNext = () => {
         if (!isLastQuestion) {
@@ -123,7 +78,8 @@ checkScope();`,
         }
     };
 
-
+    if (loading) return <div className="p-4 text-center">Loading quiz...</div>;
+    if (!currentQuestion) return <div className="p-4 text-center">No questions found for this quiz.</div>;
 
     return (
         <div className="quiz-lesson-view">
@@ -137,7 +93,7 @@ checkScope();`,
                             <span className="quiz-meta-type">Multiple Choice</span>
                         </div>
                         <h2 className="quiz-question-number">
-                            Question {currentQuestion.number} <span className="quiz-total-count">of {mockQuestions.length}</span>
+                            Question {currentQuestion.questionOrder} <span className="quiz-total-count">of {questions.length}</span>
                         </h2>
                     </div>
                     <div className="quiz-timer-box">
@@ -148,41 +104,30 @@ checkScope();`,
 
                 {/* Progress Bar */}
                 <div className="quiz-progress-track">
-                    <div className="quiz-progress-fill" style={{ width: `${((currentQuestionIndex + 1) / mockQuestions.length) * 100}%` }}></div>
+                    <div className="quiz-progress-fill" style={{ width: `${((currentQuestionIndex + 1) / questions.length) * 100}%` }}></div>
                 </div>
 
                 {/* Question Content */}
                 <div className="quiz-main-content">
-                    <p className="quiz-question-text">{currentQuestion.content}</p>
-
-                    {currentQuestion.code && (
-                        <div className="quiz-code-block">
-                            <div className="code-block-header">
-                                <span className="code-lang">javascript</span>
-                                <button className="code-copy-mini"><i className="bi bi-clipboard"></i> Copy</button>
-                            </div>
-                            <pre className="code-block-body"><code>{currentQuestion.code}</code></pre>
-                        </div>
-                    )}
+                    <p className="quiz-question-text">{currentQuestion.questionText}</p>
 
                     {/* Options Grid */}
                     <div className="quiz-options-grid">
-                        {currentQuestion.options.map((opt) => (
-                            <label key={opt.id} className={`quiz-option-card ${selectedOption === opt.id ? 'selected' : ''}`}>
+                        {currentQuestion.options?.map((opt: any) => (
+                            <label key={opt.optionId} className={`quiz-option-card ${selectedOption === opt.optionId ? 'selected' : ''}`}>
                                 <input
                                     type="radio"
                                     name="quiz_answer"
                                     className="d-none"
-                                    value={opt.id}
-                                    checked={selectedOption === opt.id}
-                                    onChange={() => setSelectedOption(opt.id)}
+                                    value={opt.optionId}
+                                    checked={selectedOption === opt.optionId}
+                                    onChange={() => setSelectedOption(opt.optionId)}
                                 />
                                 <div className="option-indicator">
                                     <div className="indicator-inner"></div>
                                 </div>
                                 <div className="option-content">
-                                    <span className="option-text">{opt.text}</span>
-                                    {opt.subtext && <span className="option-subtext">{opt.subtext}</span>}
+                                    <span className="option-text">{opt.optionText}</span>
                                 </div>
                             </label>
                         ))}

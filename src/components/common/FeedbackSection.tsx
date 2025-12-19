@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import "../../style/FeedbackSection.css";
 import {
   getCourseReviews,
@@ -74,8 +74,20 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
       ).toFixed(1)
       : "0.0";
 
-  // Mock distribution for UI (replace with real data if available)
-  const ratingDistribution = [75, 18, 5, 1, 1]; // 5 star to 1 star %
+  // Calculate distribution from actual reviews
+  const ratingDistribution = useMemo(() => {
+    if (reviews.length === 0) return [0, 0, 0, 0, 0];
+
+    const counts = [0, 0, 0, 0, 0]; // 5, 4, 3, 2, 1 stars
+    reviews.forEach((r) => {
+      const rating = Math.round(r.rating);
+      if (rating >= 1 && rating <= 5) {
+        counts[5 - rating]++;
+      }
+    });
+
+    return counts.map((count) => Math.round((count / reviews.length) * 100));
+  }, [reviews]);
 
   const handleSubmit = async () => {
     if (newRating === 0 || !newComment.trim()) return;

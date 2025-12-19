@@ -550,35 +550,68 @@ body {
 /* Auth Buttons */
 .auth-buttons {
   display: flex;
-  gap: 12px;
+  align-items: center;
+  gap: 16px;
 }
 
-.btn-login {
-  padding: 8px 20px;
+/* Use specific selector to override generic .btn-login from other files */
+.header-actions .btn-login {
+  padding: 10px 24px;
   border-radius: 9999px;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   text-decoration: none;
   color: var(--text-medium);
-  transition: color 0.2s;
+  background-color: transparent;
+  /* Ensure transparent background */
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  /* Fixed height for alignment */
+  border: 1px solid transparent;
+  /* Maintain border box sizing */
+  width: auto;
+  /* Override width: 100% from LoginPage.css if leaked */
+  margin: 0;
+  /* Reset margin */
 }
 
-.btn-login:hover {
+.header-actions .btn-login:hover {
   color: var(--primary-color);
+  background-color: rgba(236, 19, 55, 0.05);
+  /* very light primary tint */
 }
 
-.btn-register {
-  padding: 8px 20px;
-  background-color: var(--primary-color);
+.header-actions .btn-register {
+  position: relative;
+  padding: 10px 28px;
+  background: linear-gradient(135deg, var(--primary-color) 0%, #ff4757 100%);
   color: white;
   border-radius: 9999px;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   text-decoration: none;
-  transition: transform 0.2s;
-  box-shadow: 0 4px 6px -1px rgba(236, 19, 55, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(236, 19, 55, 0.3);
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  /* Fixed height for alignment */
+  border: none;
 }
 
-.btn-register:hover {
-  transform: scale(1.05);
+.header-actions .btn-register:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(236, 19, 55, 0.4);
+  background: linear-gradient(135deg, #d61131 0%, var(--primary-color) 100%);
+}
+
+.header-actions .btn-register:active {
+  transform: translateY(0);
 }

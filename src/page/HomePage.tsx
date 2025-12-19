@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { CourseModel } from "../model/CourseModel";
 import { getAllCourses } from "../api/CourseAPI";
+import { getCourseReviews } from "../api/CourseReviewAPI";
 import "../style/HomePage.css";
 
 export default function HomePage() {
@@ -48,6 +49,21 @@ export default function HomePage() {
   };
 
   const CourseItem = ({ course, isPro }: { course: CourseModel; isPro: boolean }) => {
+    const [reviewCount, setReviewCount] = useState(0);
+
+    useEffect(() => {
+      getCourseReviews(course.courseId, 0, 1)
+        .then((data) => setReviewCount(data.totalElements))
+        .catch((err) => console.error("Error loading review count:", err));
+    }, [course.courseId]);
+
+    // Format review count (e.g. 1200 -> 1.2k)
+    const formatReviewCount = (count: number) => {
+      if (count >= 1000) {
+        return (count / 1000).toFixed(1) + "k";
+      }
+      return count.toString();
+    };
 
     // Resolve Thumbnail
     const thumbnailSrc = course.thumbnailBase64?.startsWith("data:")
@@ -89,13 +105,13 @@ export default function HomePage() {
               {/* Placeholder for instructor avatar */}
               <img src="https://via.placeholder.com/20" alt="Ins" />
             </div>
-            <span>Sơn Đặng</span> {/* Hardcoded for now per design */}
+            <span>Duc Day</span> {/* Hardcoded for now per design */}
           </div>
 
           <div className="card-rating">
             <i className="bi bi-star-fill text-yellow"></i>
-            <span className="rating-val">4.9</span>
-            <span className="rating-count">(1.2k đánh giá)</span>
+            <span className="rating-val">{course.averageRating?.toFixed(1) || "0.0"}</span>
+            <span className="rating-count">({formatReviewCount(reviewCount)} đánh giá)</span>
           </div>
 
           <div className="card-footer">

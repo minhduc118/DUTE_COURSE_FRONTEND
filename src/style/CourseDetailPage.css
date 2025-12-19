@@ -607,3 +607,29 @@
   line-height: 1.6;
   color: var(--text-medium);
 }
+
+/* Avatar Group */
+.avatar-group {
+  display: flex;
+  align-items: center;
+}
+
+.student-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--white);
+  object-fit: cover;
+  margin-left: -12px;
+  transition: transform 0.2s;
+}
+
+.student-avatar:first-child {
+  margin-left: 0;
+}
+
+.student-avatar:hover {
+  transform: translateY(-4px);
+  z-index: 10;
+  position: relative;
+}

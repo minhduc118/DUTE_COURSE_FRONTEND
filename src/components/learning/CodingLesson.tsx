@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Editor from "@monaco-editor/react";
 import { LessonModel, CourseModel, SectionModel } from "../../model/CourseModel";
+import { getCodingExerciseByLessonId } from "../../api/CodingAPI";
+import { CodingExerciseResponse } from "../../model/CourseModel";
 
 interface CodingLessonProps {
     currentLesson: LessonModel;
@@ -18,52 +20,38 @@ export const CodingLesson: React.FC<CodingLessonProps> = ({
 }) => {
     const [activeTab, setActiveTab] = useState<'test' | 'console'>('test');
     const [language, setLanguage] = useState('python');
-    const [code, setCode] = useState(`def fizzBuzz(n):
-    """
-    :type n: int
-    :rtype: List[str]
-    """
-    # Write your solution here
-    result = []
-    for i in range(1, n + 1):
-        if i % 3 == 0 and i % 5 == 0:
-            result.append("FizzBuzz")
-        elif i % 3 == 0:
-            result.append("Fizz")
-        elif i % 5 == 0:
-            result.append("Buzz")
-        else:
-            result.append(str(i))
-    return result`);
+    const [code, setCode] = useState("");
+    const [exercise, setExercise] = useState<CodingExerciseResponse | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchExercise = async () => {
+            if (!currentLesson?.lessonId) return;
+            try {
+                setLoading(true);
+                const data = await getCodingExerciseByLessonId(currentLesson.lessonId);
+                setExercise(data);
+                if (data) {
+                    setLanguage(data.language.toLowerCase());
+                    setCode(data.starterCode);
+                }
+            } catch (error) {
+                console.error("Failed to load coding exercise", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchExercise();
+    }, [currentLesson?.lessonId]);
 
     const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const newLang = e.target.value;
         setLanguage(newLang);
-        // In real app, this would revert to the starter code for that language
-        if (newLang === 'java') {
-            setCode(`class Solution {
-    public List<String> fizzBuzz(int n) {
-        // Write your code here
-        return new ArrayList<>();
-    }
-}`);
-        } else if (newLang === 'python') {
-            setCode(`def fizzBuzz(n):
-    """
-    :type n: int
-    :rtype: List[str]
-    """
-    # Write your solution here
-    pass`);
-        } else if (newLang === 'cpp') {
-            setCode(`class Solution {
-public:
-    vector<string> fizzBuzz(int n) {
-        // Write top-notch C++ code
-    }
-};`);
-        }
+        // In a real scenario with multiple language support, you would fetch/switch starter code here
     };
+
+    if (loading) return <div className="p-4 text-center text-white">Loading exercise...</div>;
+    if (!exercise) return <div className="p-4 text-center text-white">No coding exercise found.</div>;
 
     return (
         <div className="coding-lesson-view">
@@ -72,56 +60,47 @@ public:
                 <div className="coding-panel-left">
                     <div className="coding-header-sticky">
                         <div className="coding-title-row">
-                            <h1 className="coding-title">FizzBuzz Challenge</h1>
+                            <h1 className="coding-title">{exercise.title}</h1>
                             <span className="coding-difficulty-badge">Medium</span>
                         </div>
                         <p className="coding-meta">
-                            <i className="bi bi-clock"></i> 15 mins
+                            <i className="bi bi-clock"></i> {exercise.timeLimitSeconds ? Math.floor(exercise.timeLimitSeconds / 60) : 15} mins
                             <span className="coding-dot">•</span>
-                            <i className="bi bi-bar-chart"></i> 450 users solved
+                            <i className="bi bi-code-slash"></i> {exercise.language}
                         </p>
                     </div>
 
                     <div className="coding-content-scroll">
                         <div className="coding-prose">
-                            <p>
-                                Write a program that prints the numbers from <code className="code-pill">1</code> to <code className="code-pill">100</code>. But for multiples of three print "Fizz" instead of the number and for the multiples of five print "Buzz". For numbers which are multiples of both three and five print "FizzBuzz".
-                            </p>
+                            <div dangerouslySetInnerHTML={{ __html: exercise.problemStatement }} />
 
-                            <h3>Example Input/Output</h3>
-                            <div className="example-box">
-                                <div className="example-row">
-                                    <div className="example-label">Input:</div>
-                                    <div className="example-value">n = 15</div>
+                            {exercise.instructions && (
+                                <div className="mt-4">
+                                    <h3>Instructions</h3>
+                                    <div dangerouslySetInnerHTML={{ __html: exercise.instructions }} />
                                 </div>
-                                <div className="example-row mt-2">
-                                    <div className="example-label">Output:</div>
-                                    <div className="example-val-success">
-                                        ["1", "2", "Fizz", "4", "Buzz", "Fizz", "7", "8", "Fizz", "Buzz", "11", "Fizz", "13", "14", "FizzBuzz"]
+                            )}
+
+                            {exercise.testCases && exercise.testCases.length > 0 && (
+                                <>
+                                    <h3>Example</h3>
+                                    <div className="example-box">
+                                        <div className="example-row">
+                                            <div className="example-label">Input:</div>
+                                            <div className="example-value">{exercise.testCases[0].input}</div>
+                                        </div>
+                                        <div className="example-row mt-2">
+                                            <div className="example-label">Output:</div>
+                                            <div className="example-val-success">
+                                                {exercise.testCases[0].expectedOutput}
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
-
-                            <h3>Constraints</h3>
-                            <ul className="coding-list">
-                                <li>The input <code className="code-pill">n</code> will be a positive integer.</li>
-                                <li>1 &lt;= n &lt;= 100</li>
-                            </ul>
+                                </>
+                            )}
                         </div>
 
-                        <div className="coding-hint-box">
-                            <details className="coding-details">
-                                <summary className="coding-summary">
-                                    <span className="hint-label">
-                                        <i className="bi bi-lightbulb-fill text-warning"></i> Hint 1
-                                    </span>
-                                    <i className="bi bi-chevron-down"></i>
-                                </summary>
-                                <div className="hint-content">
-                                    Check the divisibility using the modulo operator (%). For example, <code>number % 3 == 0</code> checks if a number is divisible by 3.
-                                </div>
-                            </details>
-                        </div>
+
                     </div>
                 </div>
 
@@ -136,9 +115,7 @@ public:
                                 onChange={handleLanguageChange}
                                 style={{ background: '#0b0d11', color: 'white', border: '1px solid #282e39' }}
                             >
-                                <option value="python">Python 3.10</option>
-                                <option value="java">Java 17</option>
-                                <option value="cpp">C++ 20</option>
+                                <option value={exercise.language.toLowerCase()}>{exercise.language}</option>
                             </select>
                         </div>
                         <div className="editor-actions">

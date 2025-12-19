@@ -161,9 +161,9 @@ export default function ListCourses() {
                     </td>
                     <td>
                       <div className="d-flex flex-column">
-                        <span className="fw-bold" style={{ color: 'var(--primary-rose)' }}>{course.price?.toLocaleString()} ₫</span>
+                        <span className="fw-bold" style={{ color: 'var(--primary-rose)' }}>{course.discountPrice?.toLocaleString()} ₫</span>
                         {course.discountPrice && course.discountPrice < course.price! && (
-                          <span className="small text-muted text-decoration-line-through">{course.discountPrice.toLocaleString()} ₫</span>
+                          <span className="small text-muted text-decoration-line-through">{course.price.toLocaleString()} ₫</span>
                         )}
                       </div>
                     </td>
