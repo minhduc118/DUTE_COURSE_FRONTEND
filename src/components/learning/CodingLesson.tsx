@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import Editor from "@monaco-editor/react";
 import { LessonModel, CourseModel, SectionModel } from "../../model/CourseModel";
-import { getCodingExerciseByLessonId } from "../../api/CodingAPI";
-import { CodingExerciseResponse } from "../../model/CourseModel";
+import { getCodingExerciseByLessonId, submitCodingExercise } from "../../api/CodingAPI";
+import { CodingExerciseResponse, CodingSubmissionResponse, CodingSubmissionRequest } from "../../model/CourseModel";
 
 interface CodingLessonProps {
     currentLesson: LessonModel;
@@ -48,6 +48,38 @@ export const CodingLesson: React.FC<CodingLessonProps> = ({
         const newLang = e.target.value;
         setLanguage(newLang);
         // In a real scenario with multiple language support, you would fetch/switch starter code here
+    };
+
+    const [selectedTestCase, setSelectedTestCase] = useState(0);
+
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submissionResult, setSubmissionResult] = useState<CodingSubmissionResponse | null>(null);
+
+    const visibleTestCases = submissionResult?.results?.filter(r => !(r.isHidden || r.hidden)) || [];
+
+    const handleRunCode = async () => {
+        if (!exercise) return;
+        setIsSubmitting(true);
+        setActiveTab('test'); // Switch to test tab to show results
+
+        try {
+            const payload: CodingSubmissionRequest = {
+                sourceCode: code
+            };
+
+            const result = await submitCodingExercise(exercise.exerciseId, payload);
+            console.log("Result Output", result);
+            setSubmissionResult(result);
+
+            if (result.success) {
+                // You might want to auto-expand the first failed test case or the first one
+            }
+        } catch (error) {
+            console.error("Submission failed", error);
+            // Handle error (show toast etc)
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     if (loading) return <div className="p-4 text-center text-white">Loading exercise...</div>;
@@ -166,29 +198,54 @@ export const CodingLesson: React.FC<CodingLessonProps> = ({
                         <div className="console-content">
                             {activeTab === 'test' ? (
                                 <div className="test-results-view">
-                                    <div className="test-cases-list">
-                                        <button className="test-case-btn active">Case 1 <i className="bi bi-check"></i></button>
-                                        <button className="test-case-btn">Case 2 <i className="bi bi-check opacity-50"></i></button>
-                                        <button className="test-case-btn">Case 3 <i className="bi bi-check opacity-50"></i></button>
-                                    </div>
-                                    <div className="test-case-detail">
-                                        <div className="detail-header">Case 1 Details</div>
-                                        <div className="detail-grid">
-                                            <div className="detail-label">Input:</div>
-                                            <div className="detail-val">n = 3</div>
-                                            <div className="detail-label">Output:</div>
-                                            <div className="detail-val">["1", "2", "Fizz"]</div>
-                                            <div className="detail-label">Expected:</div>
-                                            <div className="detail-val text-success">["1", "2", "Fizz"]</div>
+                                    {!submissionResult ? (
+                                        <div className="text-secondary p-4 text-center">Run code to see test results.</div>
+                                    ) : visibleTestCases.length > 0 ? (
+                                        <>
+                                            <div className="test-cases-list">
+                                                {visibleTestCases.map((res, idx) => (
+                                                    <button
+                                                        key={idx}
+                                                        className={`test-case-btn ${selectedTestCase === idx ? 'active' : ''}`}
+                                                        onClick={() => setSelectedTestCase(idx)}
+                                                    >
+                                                        Case {idx + 1}
+                                                        {res.isPassed ? <i className="bi bi-check text-success"></i> : <i className="bi bi-x text-danger"></i>}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                            {visibleTestCases[selectedTestCase] && (
+                                                <div className="test-case-detail">
+                                                    <div className="detail-header">Case {selectedTestCase + 1} Details</div>
+                                                    <div className="detail-grid">
+                                                        <div className="detail-label">Input:</div>
+                                                        <div className="detail-val">{visibleTestCases[selectedTestCase].input}</div>
+                                                        <div className="detail-label">Output:</div>
+                                                        <div className="detail-val">{visibleTestCases[selectedTestCase].actualOutput}</div>
+                                                        <div className="detail-label">Expected:</div>
+                                                        <div className="detail-val text-success">{visibleTestCases[selectedTestCase].expectedOutput}</div>
+                                                    </div>
+                                                    <div className={`test-status-msg ${visibleTestCases[selectedTestCase].isPassed ? 'text-success' : 'text-danger'}`}>
+                                                        {visibleTestCases[selectedTestCase].isPassed
+                                                            ? <span><i className="bi bi-check-circle-fill"></i> Test Passed</span>
+                                                            : <span><i className="bi bi-x-circle-fill"></i> Test Failed</span>
+                                                        }
+                                                        {visibleTestCases[selectedTestCase].executionTimeMs && ` (${visibleTestCases[selectedTestCase].executionTimeMs}ms)`}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <div className="text-danger p-4 text-center">
+                                            {submissionResult.message || "Compilation failed or no results."}
+                                            <br />
+                                            <small className="text-muted">Check Console Output for details.</small>
                                         </div>
-                                        <div className="test-status-msg text-success">
-                                            <i className="bi bi-check-circle-fill"></i> Test Passed (24ms)
-                                        </div>
-                                    </div>
+                                    )}
                                 </div>
                             ) : (
-                                <div className="console-output-view">
-                                    <span className="text-secondary">No output to display.</span>
+                                <div className="console-output-view p-3 font-monospace" style={{ whiteSpace: 'pre-wrap', color: '#e6edf3' }}>
+                                    {submissionResult?.compileOutput || submissionResult?.message || "No console output."}
                                 </div>
                             )}
                         </div>
@@ -199,10 +256,11 @@ export const CodingLesson: React.FC<CodingLessonProps> = ({
                                 <i className="bi bi-bug"></i> Report
                             </button>
                             <div className="console-actions-right">
-                                <button className="btn-run-code">
-                                    <i className="bi bi-play-fill"></i> Run Code
+                                <button className="btn-run-code" onClick={handleRunCode} disabled={isSubmitting}>
+                                    {isSubmitting ? <span className="spinner-border spinner-border-sm me-1"></span> : <i className="bi bi-play-fill"></i>}
+                                    Run Code
                                 </button>
-                                <button className="btn-submit-code">
+                                <button className="btn-submit-code" onClick={handleRunCode} disabled={isSubmitting}>
                                     <i className="bi bi-cloud-upload"></i> Submit
                                 </button>
                             </div>

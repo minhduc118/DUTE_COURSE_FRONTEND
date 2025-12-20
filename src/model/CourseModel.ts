@@ -119,3 +119,29 @@ export interface CodingExerciseRequest {
 export interface CodingExerciseResponse extends CodingExerciseRequest {
   exerciseId: number;
 }
+
+// --- Coding Submission ---
+export interface CodingSubmissionRequest {
+  sourceCode: string;
+}
+
+export interface TestCaseResult {
+  input: string;
+  expectedOutput: string;
+  actualOutput: string;
+  isPassed: boolean;
+  isHidden: boolean;
+  hidden?: boolean; // Backend might return this
+  executionTimeMs?: number;
+  errorMessage?: string; // For runtime/compilation errors specific to a case if applicable, or general output
+}
+
+export interface CodingSubmissionResponse {
+  submissionId?: number;
+  success: boolean; // Overall success of the submission process (or if all tests passed? usually just if it ran)
+  message?: string; // "Compilation Error", "Accepted", "Wrong Answer"
+  results: TestCaseResult[];
+  totalPassed: number;
+  totalTestCases: number;
+  compileOutput?: string; // If compilation fails
+}

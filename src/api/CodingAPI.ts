@@ -1,4 +1,4 @@
-import { CodingExerciseRequest } from "../model/CourseModel";
+import { CodingExerciseRequest, CodingSubmissionRequest } from "../model/CourseModel";
 import { getAuthHeaders } from "./apiHelper";
 
 const BASE_URL = "http://localhost:8080/api/coding-exercises";
@@ -70,6 +70,17 @@ export async function getCodingExerciseById(exerciseId: number) {
     const url = `${BASE_URL}/${exerciseId}`;
     const response = await fetch(url, {
         headers: getAuthHeaders(),
+    });
+    return handleJsonResponse(response);
+}
+
+export async function submitCodingExercise(exerciseId: number, payload: CodingSubmissionRequest) {
+    // Assuming the endpoint is POST /api/coding-exercises/{exerciseId}/submit
+    const url = `${BASE_URL}/${exerciseId}/submit`;
+    const response = await fetch(url, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(payload),
     });
     return handleJsonResponse(response);
 }
