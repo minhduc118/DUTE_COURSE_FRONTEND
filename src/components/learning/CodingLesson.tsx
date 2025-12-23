@@ -1,8 +1,16 @@
 import React, { useState, useEffect } from "react";
-import Editor from "@monaco-editor/react";
+import Editor, { loader } from "@monaco-editor/react";
 import { LessonModel, CourseModel, SectionModel } from "../../model/CourseModel";
 import { getCodingExerciseByLessonId, submitCodingExercise } from "../../api/CodingAPI";
+import { updateLessonProgress } from "../../api/CourseAPI";
 import { CodingExerciseResponse, CodingSubmissionResponse, CodingSubmissionRequest } from "../../model/CourseModel";
+
+// Configure Monaco to use local files instead of CDN
+loader.config({
+    paths: {
+        vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.50.0/min/vs'
+    }
+});
 
 interface CodingLessonProps {
     currentLesson: LessonModel;
@@ -72,7 +80,13 @@ export const CodingLesson: React.FC<CodingLessonProps> = ({
             setSubmissionResult(result);
 
             if (result.success) {
-                // You might want to auto-expand the first failed test case or the first one
+                // Mark as complete if all tests passed (or success is true)
+                updateLessonProgress(currentLesson.lessonId, {
+                    codingPassed: true,
+                    completed: true
+                }).then(() => {
+                    onToggleComplete(currentLesson.lessonId);
+                }).catch(err => console.error("Coding completion failed", err));
             }
         } catch (error) {
             console.error("Submission failed", error);

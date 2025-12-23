@@ -1,6 +1,7 @@
 import React from "react";
-import { LessonModel, CourseModel, SectionModel } from "../../model/CourseModel";
+import { LessonModel, CourseModel, SectionModel, LessonType } from "../../model/CourseModel";
 import { formatDuration } from "../../utils/formatUtils";
+import { useLessonProgress } from "../../hooks/useLessonProgress";
 
 interface ReadingLessonProps {
     currentLesson: LessonModel;
@@ -25,6 +26,17 @@ export const ReadingLesson: React.FC<ReadingLessonProps> = ({
     nextLesson,
     onLessonClick,
 }) => {
+    // Auto-complete lesson after 30 seconds using hook
+    useLessonProgress({
+        lessonId: currentLesson.lessonId,
+        lessonType: LessonType.READING,
+        onComplete: onToggleComplete,
+        isAlreadyCompleted: completedLessons.has(currentLesson.lessonId),
+        config: {
+            thresholdSeconds: 30
+        }
+    });
+
     return (
         <div className="reading-lesson-view">
             <div className="reading-progress-sticky">
@@ -97,17 +109,7 @@ export const ReadingLesson: React.FC<ReadingLessonProps> = ({
 
                 <footer className="reading-footer">
                     <div className="completion-row">
-                        <div
-                            className={`mark-complete-toggle ${completedLessons.has(currentLesson.lessonId) ? "checked" : ""}`}
-                            onClick={() => onToggleComplete(currentLesson.lessonId)}
-                        >
-                            <div className="checkbox-custom">
-                                <i className="bi bi-check-lg"></i>
-                            </div>
-                            <span className="completion-label">Đánh dấu bài học này đã hoàn thành</span>
-                        </div>
-
-                        <div className="completion-nav-btns">
+                        <div className="completion-nav-btns w-100 d-flex justify-content-between">
                             <button
                                 className="btn-article-nav prev"
                                 disabled={!prevLesson}

@@ -1,4 +1,4 @@
-import { CourseModel, SectionModel, LessonModel } from "../model/CourseModel";
+import { CourseModel, SectionModel, LessonModel, LessonProgressUpdate, LessonProgressResponse } from "../model/CourseModel";
 import { Student } from "../model/UserModel";
 import { getAuthHeaders } from "./apiHelper";
 
@@ -288,4 +288,62 @@ export async function getStudentsByCourseId(
     headers: getAuthHeaders(),
   });
   return handleJsonResponse(response);
+}
+
+
+
+export async function getLessonProgress(lessonId: number): Promise<LessonProgressResponse> {
+  const url = `http://localhost:8080/api/lessons/${lessonId}/progress`;
+  const response = await fetch(url, { headers: getAuthHeaders() });
+  return handleJsonResponse(response);
+}
+
+export async function startWatchSession(lessonId: number): Promise<{ sessionKey: string }> {
+  const url = `http://localhost:8080/api/lessons/${lessonId}/watch-session/start`;
+  const response = await fetch(url, {
+    method: "POST",
+    headers: getAuthHeaders(),
+  });
+  return handleJsonResponse(response);
+}
+
+export async function sendWatchHeartbeat(
+  lessonId: number,
+  sessionKey: string
+): Promise<{ isCompleted: boolean }> {
+  const url = `http://localhost:8080/api/lessons/${lessonId}/watch`;
+  const response = await fetch(url, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ sessionKey }),
+  });
+  return handleJsonResponse(response);
+}
+
+export async function stopWatchSession(lessonId: number, sessionKey: string): Promise<void> {
+  const url = `http://localhost:8080/api/lessons/${lessonId}/watch-session/stop`;
+  await fetch(url, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ sessionKey }),
+  });
+}
+
+
+export async function updateLessonProgress(
+  lessonId: number,
+  data: LessonProgressUpdate
+): Promise<void> {
+  const url = `http://localhost:8080/api/lessons/${lessonId}/progress`;
+  console.log("Updating lesson progress:", url, data);
+  const response = await fetch(url, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Failed to update lesson progress: ${response.status} ${text}`);
+  }
 }

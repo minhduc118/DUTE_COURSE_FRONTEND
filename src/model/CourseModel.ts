@@ -63,6 +63,7 @@ export class LessonModel {
   codingExerciseId?: number;
   isPreview!: boolean;
   isLocked!: boolean;
+  isCompleted?: boolean; // User progress status
 
   // Conditional fields
   youtubeUrl?: string;     // Only for VIDEO
@@ -96,6 +97,41 @@ export interface QuizRequest {
   passingScore?: number;
   maxAttempts?: number;
   questions: QuizQuestionRequest[];
+}
+
+// --- Quiz Start & Submit Interfaces ---
+export interface QuizStartResponse {
+  attemptId: number;
+  quizId: number;
+  title: string;
+  timeLimitSeconds: number;
+  totalQuestions: number;
+  startedAt: string;
+  expiresAt: string;
+}
+
+export interface QuizAnswerRequest {
+  questionId: number;
+  selectedOptionIds: number[];
+}
+
+export interface QuizSubmitRequest {
+  answers: QuizAnswerRequest[];
+}
+
+export interface QuizAttemptResponse {
+  attemptId: number;
+  quizId: number;
+  userId: number;
+  score: number;
+  passed: boolean;
+  correctAnswers: number;
+  totalQuestions: number;
+  earnedPoints: number;
+  totalPoints: number;
+  startedAt: string;
+  submittedAt: string;
+  expired: boolean;
 }
 
 // --- Coding Interfaces ---
@@ -144,4 +180,22 @@ export interface CodingSubmissionResponse {
   totalPassed: number;
   totalTestCases: number;
   compileOutput?: string; // If compilation fails
+}
+
+export interface LessonProgressUpdate {
+  completed?: boolean;
+  watchedSeconds?: number;
+  secondsWatched?: number;
+  quizScore?: number;
+  quizPassed?: boolean;
+  codingPassed?: boolean;
+  lastPingAt?: string;
+}
+
+export interface LessonProgressResponse {
+  watchedSeconds: number;
+  isCompleted: boolean;
+  quizScore?: number;
+  quizPassed?: boolean;
+  codingPassed?: boolean;
 }

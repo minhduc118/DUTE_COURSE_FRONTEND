@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
+import YouTube, { YouTubeProps, YouTubePlayer } from 'react-youtube';
 import { LessonModel, SectionModel, LessonType } from "../../model/CourseModel";
 import { formatDuration } from "../../utils/formatUtils";
 import { InstructorWidget } from "./widgets/InstructorWidget";
 import { UpNextWidget } from "./widgets/UpNextWidget";
+import { useLessonProgress } from "../../hooks/useLessonProgress";
 
 interface VideoLessonProps {
     currentLesson: LessonModel;
@@ -11,6 +13,8 @@ interface VideoLessonProps {
     onTabChange: (tab: string) => void;
     nextLesson: { lesson: LessonModel; section: SectionModel } | null;
     onLessonClick: (lesson: LessonModel, section: SectionModel) => void;
+    onToggleComplete: (lessonId: number) => void;
+    completedLessons: Set<number>;
 }
 
 export const VideoLesson: React.FC<VideoLessonProps> = ({
@@ -20,31 +24,140 @@ export const VideoLesson: React.FC<VideoLessonProps> = ({
     onTabChange,
     nextLesson,
     onLessonClick,
+    onToggleComplete,
+    completedLessons,
 }) => {
-    const getYouTubeEmbedUrl = (url: string) => {
+    const [showWarning, setShowWarning] = useState(false);
+    const playerRef = useRef<YouTubePlayer | null>(null);
+    const lastTimeRef = useRef(0);
+
+    const { handlePlay, handlePause, initialWatchedSeconds } = useLessonProgress({
+        lessonId: currentLesson.lessonId,
+        lessonType: LessonType.VIDEO,
+        durationSeconds: currentLesson.durationSeconds || 0,
+        onComplete: onToggleComplete,
+        isAlreadyCompleted: completedLessons.has(currentLesson.lessonId),
+        config: {
+            videoCompletionPercentage: 25,
+            intervalSeconds: 10
+        }
+    });
+
+    // Seek Detection Logic
+    useEffect(() => {
+        const checkInterval = setInterval(() => {
+            // Check if playerRef.current exists and has getCurrentTime method
+            if (playerRef.current && typeof playerRef.current.getCurrentTime === 'function') {
+                try {
+                    const currentTime = playerRef.current.getCurrentTime();
+                    const diff = currentTime - lastTimeRef.current;
+
+                    console.log('Seek check:', { currentTime, lastTime: lastTimeRef.current, diff });
+
+                    // If jumped forward more than 2 seconds (allow 1s for normal playback + buffer)
+                    if (diff > 2) {
+                        console.log('⚠️ Seek detected! Showing warning...');
+                        setShowWarning(true);
+                        // Hide warning after 3 seconds
+                        setTimeout(() => setShowWarning(false), 3000);
+                    }
+                    lastTimeRef.current = currentTime;
+                } catch (e) {
+                    console.error('Error checking seek:', e);
+                }
+            }
+        }, 1000);
+
+        return () => {
+            clearInterval(checkInterval);
+            playerRef.current = null; // Cleanup ref on unmount
+        };
+    }, []);
+
+    const opts: YouTubeProps['opts'] = React.useMemo(() => ({
+        height: '100%',
+        width: '100%',
+        playerVars: {
+            autoplay: 0,
+        },
+    }), []);
+
+    const onReady: YouTubeProps['onReady'] = React.useCallback((event: any) => {
+        playerRef.current = event.target;
+        if (initialWatchedSeconds > 0 && !completedLessons.has(currentLesson.lessonId)) {
+            try {
+                if (event.target && typeof event.target.seekTo === 'function') {
+                    event.target.seekTo(initialWatchedSeconds, true);
+                }
+            } catch (error) {
+                console.warn("Failed to seek video:", error);
+            }
+        }
+    }, [initialWatchedSeconds, currentLesson.lessonId, completedLessons]);
+
+    const onPlayerStateChange: YouTubeProps['onStateChange'] = React.useCallback((event: any) => {
+        if (event.data === 1) {
+            handlePlay();
+        } else if (event.data === 2 || event.data === 0) {
+            handlePause();
+        }
+    }, [handlePlay, handlePause]);
+
+    const getYouTubeVideoId = (url: string) => {
         if (!url) return "";
         const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
         const match = url.match(regExp);
-        const videoId = (match && match[2].length === 11) ? match[2] : null;
-        if (videoId) return `https://www.youtube.com/embed/${videoId}?autoplay=0`;
-        if (url.includes("youtube.com/embed")) return url;
-        return "";
+        return (match && match[2].length === 11) ? match[2] : "";
     };
+
+    const videoId = getYouTubeVideoId(currentLesson.youtubeUrl || "");
 
     return (
         <div className="main-container-learning">
             <div className="video-wrapper-learning">
                 <div className="aspect-video-container">
                     {currentLesson.lessonType === LessonType.VIDEO || !currentLesson.lessonType ? (
-                        currentLesson.youtubeUrl ? (
-                            <iframe
-                                src={getYouTubeEmbedUrl(currentLesson.youtubeUrl)}
-                                title={currentLesson.title}
-                                frameBorder="0"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
-                                className="w-100 h-100"
-                            ></iframe>
+                        videoId ? (
+                            <div className="w-100 h-100" style={{ position: 'relative' }}>
+                                <YouTube
+                                    key={videoId} // Force re-mount on video change
+                                    videoId={videoId}
+                                    opts={opts}
+                                    className="w-100 h-100"
+                                    iframeClassName="w-100 h-100"
+                                    onReady={onReady}
+                                    onStateChange={onPlayerStateChange}
+                                // onPlay/onPause are handled by onStateChange for better consistency
+                                />
+                                {showWarning && (
+                                    <div
+                                        className="position-absolute top-0 start-0 w-100 p-3"
+                                        style={{
+                                            zIndex: 9999,
+                                            pointerEvents: 'none'
+                                        }}
+                                    >
+                                        <div
+                                            className="alert alert-warning d-flex align-items-center shadow-sm"
+                                            role="alert"
+                                            style={{
+                                                backgroundColor: '#fff3cd',
+                                                borderColor: '#ffc107',
+                                                color: '#856404',
+                                                fontSize: '14px',
+                                                padding: '12px 16px',
+                                                borderRadius: '8px',
+                                                boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                                            }}
+                                        >
+                                            <i className="bi bi-exclamation-triangle-fill me-2"></i>
+                                            <div>
+                                                <strong>Cảnh báo:</strong> Bạn đang tua video quá nhanh! Việc này có thể ảnh hưởng đến việc ghi nhận hoàn thành bài học.
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         ) : (
                             <div className="d-flex align-items-center justify-content-center h-100 bg-dark text-white">
                                 <div className="text-center">

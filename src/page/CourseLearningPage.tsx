@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { CourseModel, SectionModel, LessonModel, LessonType } from "../model/CourseModel";
-import { getCourseDetail } from "../api/CourseAPI";
+import { getCourseDetail, updateLessonProgress } from "../api/CourseAPI";
 
 // Modular Components
 import { LearningHeader, LearningSidebar, ReadingLesson, VideoLesson, QuizLesson, CodingLesson } from "../components/learning";
@@ -40,6 +40,17 @@ export default function CourseLearningPage() {
         setCurrentLesson(firstLesson);
         setCurrentSection(firstSection);
       }
+
+      // Initialize completed lessons from course data
+      const completed = new Set<number>();
+      course.sections.forEach(section => {
+        section.lessons?.forEach(lesson => {
+          if (lesson.isCompleted) {
+            completed.add(lesson.lessonId);
+          }
+        });
+      });
+      setCompletedLessons(completed);
     }
   }, [course]);
 
@@ -108,6 +119,7 @@ export default function CourseLearningPage() {
   const toggleComplete = (lessonId: number) => {
     const newCompleted = new Set(completedLessons);
     if (newCompleted.has(lessonId)) {
+      // If unmarking is supported, we would need an API call here too, but for now just local.
       newCompleted.delete(lessonId);
     } else {
       newCompleted.add(lessonId);
@@ -249,6 +261,8 @@ export default function CourseLearningPage() {
                   onTabChange={setActiveTab}
                   nextLesson={nextLesson}
                   onLessonClick={handleLessonClick}
+                  onToggleComplete={toggleComplete}
+                  completedLessons={completedLessons}
                 />
               )
             )

@@ -1,4 +1,4 @@
-import { QuizRequest } from "../model/CourseModel";
+import { QuizRequest, QuizStartResponse, QuizSubmitRequest, QuizAttemptResponse } from "../model/CourseModel";
 import { getAuthHeaders } from "./apiHelper";
 
 const BASE_URL = "http://localhost:8080/api/quizzes";
@@ -51,5 +51,30 @@ export async function getQuizByLessonId(lessonId: number) {
     if (response.status === 404) {
         return null;
     }
+    return handleJsonResponse(response);
+}
+
+/**
+ * Start a new quiz attempt
+ */
+export async function startQuizAttempt(quizId: number): Promise<QuizStartResponse> {
+    const url = `${BASE_URL}/${quizId}/start`;
+    const response = await fetch(url, {
+        method: "POST",
+        headers: getAuthHeaders(),
+    });
+    return handleJsonResponse(response);
+}
+
+/**
+ * Submit quiz answers for grading
+ */
+export async function submitQuiz(attemptId: number, answers: QuizSubmitRequest): Promise<QuizAttemptResponse> {
+    const url = `${BASE_URL}/attempt/${attemptId}/submit`;
+    const response = await fetch(url, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(answers),
+    });
     return handleJsonResponse(response);
 }
