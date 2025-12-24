@@ -591,12 +591,14 @@ export default function CourseDetailPage() {
                           })
                         }
                         required
+                        disabled={!!editingLesson}
                       >
                         <option value={LessonType.VIDEO}>Video Lesson</option>
                         <option value={LessonType.READING}>Reading Material</option>
                         <option value={LessonType.QUIZ}>Quiz / Assessment</option>
                         <option value={LessonType.CODING}>Coding Exercise</option>
                       </select>
+                      {editingLesson && <div className="form-text text-muted small"><i className="bi bi-info-circle"></i> Lesson type cannot be changed once created.</div>}
                     </div>
                     <div className="col-12">
                       <label className="form-label text-muted small fw-bold">TITLE</label>
@@ -681,23 +683,28 @@ export default function CourseDetailPage() {
                     )}
 
                     <div className="col-12">
-                      <div className="form-check form-switch bg-light p-3 rounded border">
-                        <input
-                          className="form-check-input"
-                          type="checkbox"
-                          id="lessonPreviewSwitch"
-                          checked={lessonForm.isPreview}
-                          onChange={(e) =>
-                            setLessonForm({
-                              ...lessonForm,
-                              isPreview: e.target.checked,
-                            })
-                          }
-                        />
-                        <label className="form-check-label fw-medium mx-2" htmlFor="lessonPreviewSwitch">
-                          Allow Free Preview
-                        </label>
-                        <div className="text-muted small ms-2">If enabled, users can view this lesson without purchasing.</div>
+                      <div
+                        className={`d-flex align-items-center justify-content-between p-3 rounded-3 border transition-all cursor-pointer ${lessonForm.isPreview ? 'bg-primary-subtle border-primary' : 'bg-light border-light'}`}
+                        onClick={() => setLessonForm({ ...lessonForm, isPreview: !lessonForm.isPreview })}
+                      >
+                        <div className="d-flex align-items-center gap-3">
+                          <div className={`d-flex align-items-center justify-content-center rounded-circle ${lessonForm.isPreview ? 'bg-primary text-white' : 'bg-white text-muted border'}`} style={{ width: 32, height: 32 }}>
+                            <i className={`bi ${lessonForm.isPreview ? 'bi-check-lg' : 'bi-eye-slash'}`}></i>
+                          </div>
+                          <div>
+                            <h6 className={`fw-bold mb-0 ${lessonForm.isPreview ? 'text-primary' : 'text-dark'}`}>Allow Free Preview</h6>
+                            <div className="text-muted small">Users can view this lesson without purchasing</div>
+                          </div>
+                        </div>
+                        <div className="form-check form-switch">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            checked={lessonForm.isPreview}
+                            onChange={() => { }} // Handled by parent click
+                            style={{ cursor: 'pointer' }}
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>

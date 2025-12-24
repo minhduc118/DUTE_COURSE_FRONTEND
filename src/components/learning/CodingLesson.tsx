@@ -79,7 +79,7 @@ export const CodingLesson: React.FC<CodingLessonProps> = ({
             console.log("Result Output", result);
             setSubmissionResult(result);
 
-            if (result.success) {
+            if (result.status === 'PASSED') {
                 // Mark as complete if all tests passed (or success is true)
                 updateLessonProgress(currentLesson.lessonId, {
                     codingPassed: true,
@@ -224,7 +224,7 @@ export const CodingLesson: React.FC<CodingLessonProps> = ({
                                                         onClick={() => setSelectedTestCase(idx)}
                                                     >
                                                         Case {idx + 1}
-                                                        {res.isPassed ? <i className="bi bi-check text-success"></i> : <i className="bi bi-x text-danger"></i>}
+                                                        {res.passed ? <i className="bi bi-check text-success"></i> : <i className="bi bi-x text-danger"></i>}
                                                     </button>
                                                 ))}
                                             </div>
@@ -239,8 +239,8 @@ export const CodingLesson: React.FC<CodingLessonProps> = ({
                                                         <div className="detail-label">Expected:</div>
                                                         <div className="detail-val text-success">{visibleTestCases[selectedTestCase].expectedOutput}</div>
                                                     </div>
-                                                    <div className={`test-status-msg ${visibleTestCases[selectedTestCase].isPassed ? 'text-success' : 'text-danger'}`}>
-                                                        {visibleTestCases[selectedTestCase].isPassed
+                                                    <div className={`test-status-msg ${visibleTestCases[selectedTestCase].passed ? 'text-success' : 'text-danger'}`}>
+                                                        {visibleTestCases[selectedTestCase].passed
                                                             ? <span><i className="bi bi-check-circle-fill"></i> Test Passed</span>
                                                             : <span><i className="bi bi-x-circle-fill"></i> Test Failed</span>
                                                         }
@@ -270,6 +270,14 @@ export const CodingLesson: React.FC<CodingLessonProps> = ({
                                 <i className="bi bi-bug"></i> Report
                             </button>
                             <div className="console-actions-right">
+                                {submissionResult && (
+                                    <span className={`me-3 fw-bold ${submissionResult.status === 'PASSED' ? 'text-success' : 'text-danger'}`}>
+                                        {submissionResult.status === 'PASSED'
+                                            ? <span><i className="bi bi-check-circle-fill me-1"></i> Passed</span>
+                                            : <span><i className="bi bi-x-circle-fill me-1"></i> Failed</span>
+                                        }
+                                    </span>
+                                )}
                                 <button className="btn-run-code" onClick={handleRunCode} disabled={isSubmitting}>
                                     {isSubmitting ? <span className="spinner-border spinner-border-sm me-1"></span> : <i className="bi bi-play-fill"></i>}
                                     Run Code

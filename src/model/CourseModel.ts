@@ -108,6 +108,9 @@ export interface QuizStartResponse {
   totalQuestions: number;
   startedAt: string;
   expiresAt: string;
+  maxAttemptReached?: boolean;
+  maxAttempts?: number;
+  usedAttempts?: number;
 }
 
 export interface QuizAnswerRequest {
@@ -165,7 +168,8 @@ export interface TestCaseResult {
   input: string;
   expectedOutput: string;
   actualOutput: string;
-  isPassed: boolean;
+  isPassed?: boolean;
+  passed?: boolean; // Backend returns this
   isHidden: boolean;
   hidden?: boolean; // Backend might return this
   executionTimeMs?: number;
@@ -174,7 +178,8 @@ export interface TestCaseResult {
 
 export interface CodingSubmissionResponse {
   submissionId?: number;
-  success: boolean; // Overall success of the submission process (or if all tests passed? usually just if it ran)
+  success: boolean; // Overall success of the submission process
+  status?: string; // 'PASSED', 'FAILED'
   message?: string; // "Compilation Error", "Accepted", "Wrong Answer"
   results: TestCaseResult[];
   totalPassed: number;
