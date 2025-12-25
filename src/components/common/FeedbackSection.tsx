@@ -13,10 +13,12 @@ import { useAuth } from "../../context/AuthContext";
 
 interface FeedbackSectionProps {
   courseId: number;
+  isEnrolled?: boolean;
 }
 
 export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
   courseId,
+  isEnrolled,
 }) => {
   const { isAuthenticated } = useAuth();
   const [reviews, setReviews] = useState<CourseReviewResponse[]>([]);
@@ -184,29 +186,39 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
         </div>
       </div>
 
-      {/* Review Form - Always visible or conditional */}
-      {isAuthenticated && (
-        <div className="feedback-form-container">
-          <h3 className="form-title">{hasReviewed ? "Chỉnh sửa đánh giá" : "Viết đánh giá"}</h3>
-          <div className="rating-input">
-            {[1, 2, 3, 4, 5].map(s => (
-              <i
-                key={s}
-                className={`bi ${s <= newRating ? 'bi-star-fill' : 'bi-star'} star-input`}
-                onClick={() => setNewRating(s)}
-              ></i>
-            ))}
+      {/* Review Form - Only for enrolled users */}
+      {isAuthenticated ? (
+        isEnrolled ? (
+          <div className="feedback-form-container">
+            <h3 className="form-title">{hasReviewed ? "Chỉnh sửa đánh giá" : "Viết đánh giá"}</h3>
+            <div className="rating-input">
+              {[1, 2, 3, 4, 5].map(s => (
+                <i
+                  key={s}
+                  className={`bi ${s <= newRating ? 'bi-star-fill' : 'bi-star'} star-input`}
+                  onClick={() => setNewRating(s)}
+                ></i>
+              ))}
+            </div>
+            <textarea
+              className="feedback-textarea"
+              placeholder="Chia sẻ trải nghiệm..."
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+            />
+            <button className="btn-submit" onClick={handleSubmit}>
+              {hasReviewed ? "Cập nhật" : "Gửi đánh giá"}
+            </button>
           </div>
-          <textarea
-            className="feedback-textarea"
-            placeholder="Chia sẻ trải nghiệm..."
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-          />
-          <button className="btn-submit" onClick={handleSubmit}>
-            {hasReviewed ? "Cập nhật" : "Gửi đánh giá"}
-          </button>
-        </div>
+        ) : (
+          <div className="feedback-form-container text-center py-4 bg-light rounded-3">
+            <i className="bi bi-lock-fill text-muted fs-3 mb-2 d-block"></i>
+            <p className="text-muted mb-0">Bạn cần đăng ký khóa học để viết đánh giá.</p>
+          </div>
+        )
+      ) : (
+        // Optional: Prompt for login if desired, or nothing
+        null
       )}
 
       <ToastContainer>

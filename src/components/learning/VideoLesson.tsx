@@ -47,9 +47,11 @@ export const VideoLesson: React.FC<VideoLessonProps> = ({
     useEffect(() => {
         const checkInterval = setInterval(() => {
             // Check if playerRef.current exists and has getCurrentTime method
-            if (playerRef.current && typeof playerRef.current.getCurrentTime === 'function') {
+            // Added check for internal player existence to prevent "Cannot read properties of null (reading 'playVideo')" or similar internal errors
+            const player = playerRef.current;
+            if (player && player.internalPlayer && typeof player.getCurrentTime === 'function') {
                 try {
-                    const currentTime = playerRef.current.getCurrentTime();
+                    const currentTime = player.getCurrentTime();
                     const diff = currentTime - lastTimeRef.current;
 
                     console.log('Seek check:', { currentTime, lastTime: lastTimeRef.current, diff });

@@ -24,22 +24,59 @@ export default function CourseLearningPage() {
 
   const mainContentRef = useRef<HTMLDivElement>(null);
 
+  const allLessonItems = useMemo(() => {
+    if (!course) return [];
+    const all: Array<{ lesson: LessonModel; section: SectionModel }> = [];
+    [...(course.sections || [])]
+      .sort((a, b) => a.sectionOrder - b.sectionOrder)
+      .forEach((section) => {
+        if (section.lessons) {
+          [...section.lessons]
+            .sort((a, b) => a.lessonOrder - b.lessonOrder)
+            .forEach((lesson) => {
+              all.push({ lesson, section });
+            });
+        }
+      });
+    return all;
+  }, [course]);
+
   useEffect(() => {
     if (slug) {
       loadCourseDetail();
     }
   }, [slug]);
 
+  // Helper to check if a lesson is locked
+  const isLessonLocked = (lesson: LessonModel): boolean => {
+    if (!course) return true;
+
+    // 1. Guest / Non-Owner: Only Preview lessons allowed
+    if (!course.isOwner) {
+      return !lesson.isPreview;
+    }
+
+    // 2. Owner / Student: Sequential Order
+    // Find index of this lesson
+    const index = allLessonItems.findIndex(
+      (item) => item.lesson.lessonId === lesson.lessonId
+    );
+
+    // First lesson is always unlocked
+    if (index <= 0) return false;
+
+    // Check previous lesson status
+    const prevItem = allLessonItems[index - 1];
+    const isPrevCompleted = completedLessons.has(prevItem.lesson.lessonId);
+
+    // Locked if previous is NOT completed
+    return !isPrevCompleted;
+  };
+
   useEffect(() => {
     if (course && course.sections && course.sections.length > 0) {
       const firstSection = course.sections[0];
       setExpandedSections(new Set([firstSection.sectionId]));
-
-      if (!currentLesson && firstSection.lessons && firstSection.lessons.length > 0) {
-        const firstLesson = firstSection.lessons.sort((a, b) => a.lessonOrder - b.lessonOrder)[0];
-        setCurrentLesson(firstLesson);
-        setCurrentSection(firstSection);
-      }
 
       // Initialize completed lessons from course data
       const completed = new Set<number>();
@@ -51,8 +88,39 @@ export default function CourseLearningPage() {
         });
       });
       setCompletedLessons(completed);
+
+      // Auto-select first UNLOCKED lesson if none selected
+      if (!currentLesson && allLessonItems.length > 0) {
+        // We need to use the logic, but 'completedLessons' state might not be set yet inside this effect run immediately 
+        // if we rely on the state 'completed' variable we just created, it works.
+
+        let firstUnlocked: { lesson: LessonModel; section: SectionModel } | null = null;
+
+        if (!course.isOwner) {
+          // Find first preview lesson
+          firstUnlocked = allLessonItems.find(item => item.lesson.isPreview) || null;
+        } else {
+          // Find first incomplete lesson (resume) OR first lesson
+          // Actually, for sequential, we want the "farthest" unlocked lesson? 
+          // Or usually just the first one that is NOT completed?
+          // Common UX: Go to first incomplete lesson.
+          firstUnlocked = allLessonItems.find(item => !completed.has(item.lesson.lessonId)) || allLessonItems[0];
+        }
+
+        if (firstUnlocked) {
+          setCurrentLesson(firstUnlocked.lesson);
+          setCurrentSection(firstUnlocked.section);
+
+          // Also expand the section of the current lesson
+          setExpandedSections(prev => {
+            const next = new Set(prev);
+            next.add(firstUnlocked!.section.sectionId);
+            return next;
+          });
+        }
+      }
     }
-  }, [course]);
+  }, [course, allLessonItems]); // Added allLessonItems to dependency, might need care to avoid loops, but allLessonItems memo depends on course
 
   // Handle scroll progress for reading lessons
   useEffect(() => {
@@ -112,6 +180,10 @@ export default function CourseLearningPage() {
   };
 
   const handleLessonClick = (lesson: LessonModel, section: SectionModel) => {
+    if (isLessonLocked(lesson)) {
+      // Optional: Add toast or shake effect here?
+      return;
+    }
     setCurrentLesson(lesson);
     setCurrentSection(section);
   };
@@ -127,22 +199,7 @@ export default function CourseLearningPage() {
     setCompletedLessons(newCompleted);
   };
 
-  const allLessonItems = useMemo(() => {
-    if (!course) return [];
-    const all: Array<{ lesson: LessonModel; section: SectionModel }> = [];
-    [...(course.sections || [])]
-      .sort((a, b) => a.sectionOrder - b.sectionOrder)
-      .forEach((section) => {
-        if (section.lessons) {
-          [...section.lessons]
-            .sort((a, b) => a.lessonOrder - b.lessonOrder)
-            .forEach((lesson) => {
-              all.push({ lesson, section });
-            });
-        }
-      });
-    return all;
-  }, [course]);
+
 
   const getNextLesson = () => {
     if (!currentLesson) return null;
@@ -150,7 +207,11 @@ export default function CourseLearningPage() {
       (item) => item.lesson.lessonId === currentLesson.lessonId
     );
     if (currentIndex < allLessonItems.length - 1) {
-      return allLessonItems[currentIndex + 1];
+      const nextItem = allLessonItems[currentIndex + 1];
+      // Important: Next button should NOT allow going to a locked lesson
+      if (!isLessonLocked(nextItem.lesson)) {
+        return nextItem;
+      }
     }
     return null;
   };
@@ -161,7 +222,10 @@ export default function CourseLearningPage() {
       (item) => item.lesson.lessonId === currentLesson.lessonId
     );
     if (currentIndex > 0) {
-      return allLessonItems[currentIndex - 1];
+      const prevItem = allLessonItems[currentIndex - 1];
+      if (!isLessonLocked(prevItem.lesson)) {
+        return prevItem;
+      }
     }
     return null;
   };
@@ -216,6 +280,7 @@ export default function CourseLearningPage() {
           onLessonClick={handleLessonClick}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
+          isLessonLocked={isLessonLocked}
         />
 
         <main className="learning-main" ref={mainContentRef}>

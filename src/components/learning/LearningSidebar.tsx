@@ -11,6 +11,7 @@ interface LearningSidebarProps {
     onLessonClick: (lesson: LessonModel, section: SectionModel) => void;
     searchQuery: string;
     onSearchChange: (query: string) => void;
+    isLessonLocked: (lesson: LessonModel) => boolean;
 }
 
 export const LearningSidebar: React.FC<LearningSidebarProps> = ({
@@ -22,6 +23,7 @@ export const LearningSidebar: React.FC<LearningSidebarProps> = ({
     onLessonClick,
     searchQuery,
     onSearchChange,
+    isLessonLocked,
 }) => {
     return (
         <aside className="learning-sidebar">
@@ -80,26 +82,30 @@ export const LearningSidebar: React.FC<LearningSidebarProps> = ({
                                     {lessons.map((lesson) => {
                                         const isActive = currentLessonId === lesson.lessonId;
                                         const isCompleted = completedLessons.has(lesson.lessonId);
+                                        const isLocked = isLessonLocked(lesson);
 
                                         return (
                                             <div
                                                 key={lesson.lessonId}
-                                                className={`lesson-item-sidebar ${isActive ? "active" : ""} ${isCompleted ? "completed" : ""}`}
-                                                onClick={() => onLessonClick(lesson, section)}
+                                                className={`lesson-item-sidebar ${isActive ? "active" : ""} ${isCompleted ? "completed" : ""} ${isLocked ? "locked" : ""}`}
+                                                onClick={() => !isLocked && onLessonClick(lesson, section)}
+                                                style={isLocked ? { cursor: 'not-allowed', opacity: 0.6 } : {}}
                                             >
                                                 {isActive && <div className="active-indicator"></div>}
                                                 <i
-                                                    className={`bi lesson-status-icon ${isCompleted
-                                                        ? "bi-check-circle-fill completed"
-                                                        : isActive
-                                                            ? "bi-play-circle-fill active"
-                                                            : lesson.lessonType === "READING"
-                                                                ? "bi-file-text-fill"
-                                                                : lesson.lessonType === "QUIZ"
-                                                                    ? "bi-question-circle-fill"
-                                                                    : lesson.lessonType === "CODING"
-                                                                        ? "bi-terminal-fill"
-                                                                        : "bi-play-circle-fill"
+                                                    className={`bi lesson-status-icon ${isLocked
+                                                            ? "bi-lock-fill"
+                                                            : isCompleted
+                                                                ? "bi-check-circle-fill completed"
+                                                                : isActive
+                                                                    ? "bi-play-circle-fill active"
+                                                                    : lesson.lessonType === "READING"
+                                                                        ? "bi-file-text-fill"
+                                                                        : lesson.lessonType === "QUIZ"
+                                                                            ? "bi-question-circle-fill"
+                                                                            : lesson.lessonType === "CODING"
+                                                                                ? "bi-terminal-fill"
+                                                                                : "bi-play-circle-fill"
                                                         }`}
                                                 ></i>
                                                 <div className="lesson-item-info">

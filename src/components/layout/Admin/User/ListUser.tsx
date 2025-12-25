@@ -4,6 +4,7 @@ import { useUsers } from "../../../../hooks/useUsers";
 import { Pagination } from "../../../common/Pagination";
 import { UserFormModal } from "./UserFormModel";
 import { DeleteUserModal } from "./DeleteUserModel";
+import UserCourseDetailPage from "./UserCourseDetailPage";
 
 export default function ListUsers() {
   const {
@@ -17,6 +18,8 @@ export default function ListUsers() {
     removeUser,
   } = useUsers(0, 10);
 
+  // State for showing the detail page
+  const [detailUserId, setDetailUserId] = useState<number | null>(null);
   const [showFormModal, setShowFormModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserModel | null>(null);
@@ -31,6 +34,13 @@ export default function ListUsers() {
         user.email?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [users, searchTerm]);
+
+  // Conditional return MUST be after all hooks
+  if (detailUserId) {
+    return <UserCourseDetailPage userId={detailUserId} onBack={() => setDetailUserId(null)} />;
+  }
+
+
 
   const handleAddUser = () => {
     setIsEdit(false);
@@ -173,6 +183,13 @@ export default function ListUsers() {
                       <div className="d-flex align-items-center justify-content-end gap-1">
                         <button className="action-btn edit" title="Edit" onClick={() => handleEditUser(user)}>
                           <i className="bi bi-pencil-square fs-5"></i>
+                        </button>
+                        <button
+                          className="action-btn view"
+                          title="View Progress"
+                          onClick={() => setDetailUserId(user.userId!)}
+                        >
+                          <i className="bi bi-eye fs-5"></i>
                         </button>
                         <button className="action-btn delete" title="Delete" onClick={() => handleDeleteUser(user)}>
                           <i className="bi bi-trash fs-5"></i>

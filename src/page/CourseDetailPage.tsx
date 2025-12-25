@@ -136,7 +136,7 @@ export default function CourseDetailPage() {
             {/* Reviews Section */}
             <div id="reviews">
               <h3 className="reviews-section-title">Đánh giá từ học viên</h3>
-              <FeedbackSection courseId={course.courseId} />
+              <FeedbackSection courseId={course.courseId} isEnrolled={course.isOwner} />
             </div>
           </div>
 

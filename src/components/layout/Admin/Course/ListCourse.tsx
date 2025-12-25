@@ -8,6 +8,7 @@ import { CourseTable } from "./CourseTable";
 import { Pagination } from "../../../common/Pagination";
 import { CourseFormModal } from "./CourseFormModal";
 import { DeleteCourseModal } from "./DeleteCourseModal";
+import { Toast, ToastContainer, ToastType } from "../../../common/Toast";
 
 
 export default function ListCourses() {
@@ -72,10 +73,31 @@ export default function ListCourses() {
     setShowFormModal(false);
   };
 
+  const [toasts, setToasts] = useState<{ id: number; message: string; type: ToastType }[]>([]);
+
+  const addToast = (message: string, type: ToastType) => {
+    const id = Date.now();
+    setToasts((prev) => [...prev, { id, message, type }]);
+  };
+
+  const removeToast = (id: number) => {
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+  };
+
   const handleConfirmDelete = async () => {
     if (selectedCourse) {
-      await removeCourse(selectedCourse.courseId!);
-      setShowDeleteModal(false);
+      try {
+        await removeCourse(selectedCourse.courseId!);
+        setShowDeleteModal(false);
+        addToast("Xóa khóa học thành công", "success");
+      } catch (error: any) {
+        console.error("Failed to delete course:", error);
+        setShowDeleteModal(false);
+        // Check for specific error message or status if possible, otherwise generic for this context
+        // User asked: "hiển thị cho tôi toast không thể xóa bởi vì những khóa học như này tôi không muốn xóa"
+        // referring to FK constraint.
+        addToast("Không thể xóa khóa học này vì đang có dữ liệu liên quan (học viên, bài học...)", "error");
+      }
     }
   };
 
@@ -232,6 +254,17 @@ export default function ListCourses() {
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleConfirmDelete}
       />
+
+      <ToastContainer>
+        {toasts.map((toast) => (
+          <Toast
+            key={toast.id}
+            message={toast.message}
+            type={toast.type}
+            onClose={() => removeToast(toast.id)}
+          />
+        ))}
+      </ToastContainer>
     </div>
   );
 }

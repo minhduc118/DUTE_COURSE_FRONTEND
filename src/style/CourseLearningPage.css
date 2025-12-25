@@ -852,7 +852,7 @@
 }
 
 .reading-article-container {
-  max-width: 800px;
+  max-width: 1500px;
   margin: 0 auto;
   padding: 60px 24px 120px 24px;
 }
@@ -1013,6 +1013,20 @@
   margin-bottom: 0;
   font-size: 15px;
   color: #d1d5db;
+}
+
+.reading-content-prose {
+  font-size: 16px;
+  line-height: 1.4;
+  color: #e2e8f0;
+  white-space: pre-wrap;
+  /* Preserve line breaks */
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.reading-content-prose p {
+  margin-bottom: 16px;
 }
 
 /* Completion Footer */
@@ -1530,11 +1544,12 @@
 .coding-prose {
   color: #cbd5e1;
   font-size: 14px;
-  line-height: 1.6;
+  line-height: 1.4;
+  white-space: pre-wrap;
 }
 
 .coding-prose p {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .coding-prose h3 {
