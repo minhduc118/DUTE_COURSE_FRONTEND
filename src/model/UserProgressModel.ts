@@ -17,6 +17,7 @@ export interface EnrolledCourse {
     status: 'COMPLETED' | 'IN_PROGRESS' | 'STARTED'; // Enum
     icon: string; // Material symbol name or image URL
     colorClass: string; // For UI logic (e.g. orange, blue)
+    courseThumbnail?: string; // optional
 }
 
 export interface UserKPIData {

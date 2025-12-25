@@ -29,6 +29,7 @@ const UserCourseDetailPage: React.FC<UserCourseDetailPageProps> = ({ userId, onB
         try {
             setLoading(true);
             const data = await UserProgressAPI.getUserDetailProgress(id);
+            console.log(data);
             setUserData(data);
         } catch (error) {
             console.error("Failed to fetch user details", error);
@@ -143,7 +144,7 @@ const UserCourseDetailPage: React.FC<UserCourseDetailPageProps> = ({ userId, onB
                     <div className="ucd-kpi-bg-circle"></div>
                     <div className="ucd-kpi-content">
                         <p className="ucd-kpi-label">Avg. Progress</p>
-                        <h3 className="ucd-kpi-value">{kpi.avgProgress}%</h3>
+                        <h3 className="ucd-kpi-value">{kpi.avgProgress?.toFixed(2)}%</h3>
                     </div>
                     <div className="ucd-kpi-footer bg-blue-100 text-blue-600">
                         <i className="bi bi-pie-chart me-1"></i> Overall
