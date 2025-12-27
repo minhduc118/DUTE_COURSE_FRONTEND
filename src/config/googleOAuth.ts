@@ -1,6 +1,6 @@
 export const GOOGLE_OAUTH_CONFIG = {
     CLIENT_ID: "843860288394-noo6vtov5alrcf9u29dv0s8jcrf97245.apps.googleusercontent.com",
-    REDIRECT_URI: "http://localhost:3000/auth/google/callback",
+    REDIRECT_URI: "http://160.30.159.12:3000/auth/google/callback",
     AUTH_URL: "https://accounts.google.com/o/oauth2/v2/auth",
     SCOPES: ["openid", "email", "profile"],
     RESPONSE_TYPE: "code",
