@@ -1,7 +1,8 @@
+import { API_BASE_URL } from "../config/config";
 import { CodingExerciseRequest, CodingSubmissionRequest } from "../model/CourseModel";
 import { getAuthHeaders } from "./apiHelper";
 
-const BASE_URL = "http://localhost:8080/api/coding-exercises";
+const BASE_URL = `${API_BASE_URL}/api/coding-exercises`;
 
 async function handleJsonResponse(response: Response) {
     const text = await response.text();

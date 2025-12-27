@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  frontend:
+    image: react-frontend:latest
+    container_name: react-frontend
+    ports:
+      - "8081:80"
+    networks:
+      - app_network
+    restart: unless-stopped
+    # Environment variable for Nginx isn't needed as we baked it in, 
+    # but good for documentation.
+    environment:
+      - REACT_APP_API_URL=http://localhost:8080	
+    external_links:
+      - api-service
+
+networks:
+  app_network:
+    name: duc_day_course_app-network
+    external: true

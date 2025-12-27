@@ -1,7 +1,8 @@
+import { API_BASE_URL } from "../config/config";
 import { QuizRequest, QuizStartResponse, QuizSubmitRequest, QuizAttemptResponse } from "../model/CourseModel";
 import { getAuthHeaders } from "./apiHelper";
 
-const BASE_URL = "http://localhost:8080/api/quizzes";
+const BASE_URL = `${API_BASE_URL}/api/quizzes`;
 
 async function handleJsonResponse(response: Response) {
     const text = await response.text();

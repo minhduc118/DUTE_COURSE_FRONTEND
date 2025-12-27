@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "../config/config";
 import { getAuthHeaders } from "./apiHelper";
 
 export interface CourseReviewResponse {
@@ -30,7 +31,7 @@ export interface CourseReviewExists {
 }
 
 export const getCourseReviewExists = async (courseId: number): Promise<CourseReviewExists> => {
-    const url = `http://localhost:8080/api/course-review/${courseId}`;
+    const url = `${API_BASE_URL}/api/course-review/${courseId}`;
     const response = await fetch(url, {
         headers: getAuthHeaders(),
     });
@@ -43,7 +44,7 @@ export const getCourseReviewExists = async (courseId: number): Promise<CourseRev
 };
 
 export const getCourseReviews = async (courseId: number, page: number = 0, size: number = 5): Promise<Page<CourseReviewResponse>> => {
-    const url = `http://localhost:8080/api/course-review?courseId=${courseId}&page=${page}&size=${size}`;
+    const url = `${API_BASE_URL}/api/course-review?courseId=${courseId}&page=${page}&size=${size}`;
     const response = await fetch(url, {
         headers: getAuthHeaders(),
     });
@@ -56,7 +57,7 @@ export const getCourseReviews = async (courseId: number, page: number = 0, size:
 };
 
 export const addCourseReview = async (courseReview: CourseReviewRequest): Promise<CourseReviewResponse> => {
-    const url = `http://localhost:8080/api/course-review`;
+    const url = `${API_BASE_URL}/api/course-review`;
     const response = await fetch(url, {
         method: "POST",
         headers: getAuthHeaders(),
@@ -71,7 +72,7 @@ export const addCourseReview = async (courseReview: CourseReviewRequest): Promis
 };
 
 export const updateCourseReview = async (courseReview: CourseReviewRequest): Promise<CourseReviewResponse> => {
-    const url = `http://localhost:8080/api/course-review`;
+    const url = `${API_BASE_URL}/api/course-review`;
     const response = await fetch(url, {
         method: "PUT",
         headers: getAuthHeaders(),

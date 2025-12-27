@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "../config/config";
 import { CourseModel, SectionModel, LessonModel, LessonProgressUpdate, LessonProgressResponse } from "../model/CourseModel";
 import { Student } from "../model/UserModel";
 import { getAuthHeaders } from "./apiHelper";
@@ -60,12 +61,12 @@ export async function getAllCourses(
   page: number = 0,
   size: number = 10
 ): Promise<ResultInterface> {
-  const url: string = `http://localhost:8080/api/courses?page=${page}&size=${size}`;
+  const url: string = `${API_BASE_URL}/api/courses?page=${page}&size=${size}`;
   return getCourses(url);
 }
 
 export async function createCourse(courseData: Partial<CourseModel>) {
-  const url = "http://localhost:8080/api/courses";
+  const url = `${API_BASE_URL}/api/courses`;
 
   const payload = courseData;
 
@@ -112,7 +113,7 @@ export async function updateCourse(
   id: number,
   courseData: Partial<CourseModel>
 ) {
-  const url: string = `http://localhost:8080/api/courses/${id}`;
+  const url: string = `${API_BASE_URL}/api/courses/${id}`;
   const payload = courseData;
 
   try {
@@ -151,7 +152,7 @@ export async function updateCourse(
 }
 
 export async function deleteCourse(id: number): Promise<void> {
-  const url = `http://localhost:8080/api/courses/${id}`;
+  const url = `${API_BASE_URL}/api/courses/${id}`;
   try {
     const response = await fetch(url, {
       method: "DELETE",
@@ -196,7 +197,7 @@ async function handleJsonResponse(response: Response) {
 }
 
 export async function getCourseDetail(slug: string): Promise<CourseModel> {
-  const url = `http://localhost:8080/api/courses/${slug}`;
+  const url = `${API_BASE_URL}/api/courses/${slug}`;
   const response = await fetch(url, {
     headers: getAuthHeaders(),
   });
@@ -204,7 +205,7 @@ export async function getCourseDetail(slug: string): Promise<CourseModel> {
 }
 
 export async function createSection(slug: string, data: Partial<SectionModel>) {
-  const url = `http://localhost:8080/api/sections/${slug}`;
+  const url = `${API_BASE_URL}/api/sections/${slug}`;
   const response = await fetch(url, {
     method: "POST",
     headers: getAuthHeaders(),
@@ -218,7 +219,7 @@ export async function updateSection(
   data: Partial<SectionModel>
 ) {
   console.log("Updating section:", sectionId, data);
-  const url = `http://localhost:8080/api/sections/${sectionId}`;
+  const url = `${API_BASE_URL}/api/sections/${sectionId}`;
   const response = await fetch(url, {
     method: "PUT",
     headers: getAuthHeaders(),
@@ -228,7 +229,7 @@ export async function updateSection(
 }
 
 export async function deleteSection(sectionId: number) {
-  const url = `http://localhost:8080/api/sections/${sectionId}`;
+  const url = `${API_BASE_URL}/api/sections/${sectionId}`;
   const response = await fetch(url, {
     method: "DELETE",
     headers: getAuthHeaders(),
@@ -241,7 +242,7 @@ export async function createLesson(
   data: Partial<LessonModel>
 ) {
   console.log("Creating lesson in section:", sectionId, data);
-  const url = `http://localhost:8080/api/sections/${sectionId}/lessons`;
+  const url = `${API_BASE_URL}/api/sections/${sectionId}/lessons`;
   const response = await fetch(url, {
     method: "POST",
     headers: getAuthHeaders(),
@@ -254,7 +255,7 @@ export async function updateLesson(
   lessonId: number,
   data: Partial<LessonModel>
 ) {
-  const url = `http://localhost:8080/api/lessons/${lessonId}`;
+  const url = `${API_BASE_URL}/api/lessons/${lessonId}`;
   const response = await fetch(url, {
     method: "PUT",
     headers: getAuthHeaders(),
@@ -264,7 +265,7 @@ export async function updateLesson(
 }
 
 export async function deleteLesson(lessonId: number) {
-  const url = `http://localhost:8080/api/lessons/${lessonId}`;
+  const url = `${API_BASE_URL}/api/lessons/${lessonId}`;
   const response = await fetch(url, {
     method: "DELETE",
     headers: getAuthHeaders(),
@@ -273,7 +274,7 @@ export async function deleteLesson(lessonId: number) {
 }
 
 export async function getLessonById(lessonId: number): Promise<LessonModel> {
-  const url = `http://localhost:8080/api/lessons/locked/${lessonId}`;
+  const url = `${API_BASE_URL}/api/lessons/locked/${lessonId}`;
   const response = await fetch(url, {
     headers: getAuthHeaders(),
   });
@@ -283,7 +284,7 @@ export async function getLessonById(lessonId: number): Promise<LessonModel> {
 export async function getStudentsByCourseId(
   courseId: number
 ): Promise<Student[]> {
-  const url = `http://localhost:8080/api/courses/${courseId}/students`;
+  const url = `${API_BASE_URL}/api/courses/${courseId}/students`;
   const response = await fetch(url, {
     headers: getAuthHeaders(),
   });
@@ -293,13 +294,13 @@ export async function getStudentsByCourseId(
 
 
 export async function getLessonProgress(lessonId: number): Promise<LessonProgressResponse> {
-  const url = `http://localhost:8080/api/lessons/${lessonId}/progress`;
+  const url = `${API_BASE_URL}/api/lessons/${lessonId}/progress`;
   const response = await fetch(url, { headers: getAuthHeaders() });
   return handleJsonResponse(response);
 }
 
 export async function startWatchSession(lessonId: number): Promise<{ sessionKey: string }> {
-  const url = `http://localhost:8080/api/lessons/${lessonId}/watch-session/start`;
+  const url = `${API_BASE_URL}/api/lessons/${lessonId}/watch-session/start`;
   const response = await fetch(url, {
     method: "POST",
     headers: getAuthHeaders(),
@@ -311,7 +312,7 @@ export async function sendWatchHeartbeat(
   lessonId: number,
   sessionKey: string
 ): Promise<{ isCompleted: boolean }> {
-  const url = `http://localhost:8080/api/lessons/${lessonId}/watch`;
+  const url = `${API_BASE_URL}/api/lessons/${lessonId}/watch`;
   const response = await fetch(url, {
     method: "POST",
     headers: getAuthHeaders(),
@@ -321,7 +322,7 @@ export async function sendWatchHeartbeat(
 }
 
 export async function stopWatchSession(lessonId: number, sessionKey: string): Promise<void> {
-  const url = `http://localhost:8080/api/lessons/${lessonId}/watch-session/stop`;
+  const url = `${API_BASE_URL}/api/lessons/${lessonId}/watch-session/stop`;
   await fetch(url, {
     method: "POST",
     headers: getAuthHeaders(),
@@ -334,7 +335,7 @@ export async function updateLessonProgress(
   lessonId: number,
   data: LessonProgressUpdate
 ): Promise<void> {
-  const url = `http://localhost:8080/api/lessons/${lessonId}/progress`;
+  const url = `${API_BASE_URL}/api/lessons/${lessonId}/progress`;
   console.log("Updating lesson progress:", url, data);
   const response = await fetch(url, {
     method: "POST",

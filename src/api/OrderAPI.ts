@@ -1,9 +1,8 @@
+import { API_BASE_URL } from "../config/config";
 import { CreateOrderRequest, OrderListResponse, OrderResponse } from "../model/OrderModel";
 import { getAuthHeaders } from "./apiHelper";
 
-
-
-const BASE_URL = 'http://localhost:8080/api/orders';
+const BASE_URL = `${API_BASE_URL}/api/orders`;
 
 export async function createOrder(request: CreateOrderRequest): Promise<OrderResponse> {
     const response = await fetch(`${BASE_URL}/create`, {

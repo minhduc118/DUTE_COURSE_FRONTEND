@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "../config/config";
 import { getAuthHeaders } from "./apiHelper";
 
 export interface DiscountValidationResult {
@@ -15,7 +16,7 @@ export async function validateDiscountCode(
     originalPrice: number
 ): Promise<DiscountValidationResult> {
 
-    const url = `http://localhost:8080/api/discounts/validate`;
+    const url = `${API_BASE_URL}/api/discounts/validate`;
     const response = await fetch(url, {
         method: 'POST',
         headers: getAuthHeaders(),

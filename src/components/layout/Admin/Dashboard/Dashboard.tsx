@@ -11,6 +11,7 @@ import {
     getRecentOrders,
     DashboardStats,
     RevenueData,
+    RevenuePeriod,
     TopCourse,
     DashboardOrder
 } from '../../../../api/DashboardAPI';
@@ -18,32 +19,44 @@ import {
 export default function Dashboard() {
     const [stats, setStats] = useState<DashboardStats | null>(null);
     const [revenueData, setRevenueData] = useState<RevenueData[]>([]);
+    const [revenuePeriod, setRevenuePeriod] = useState<RevenuePeriod>('MONTH');
     const [topCourses, setTopCourses] = useState<TopCourse[]>([]);
     const [recentOrders, setRecentOrders] = useState<DashboardOrder[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        loadDashboardData();
+        loadInitialData();
     }, []);
 
-    const loadDashboardData = async () => {
+    useEffect(() => {
+        loadRevenueData();
+    }, [revenuePeriod]);
+
+    const loadInitialData = async () => {
         try {
             setLoading(true);
-            const [statsData, revenue, courses, orders] = await Promise.all([
+            const [statsData, courses, orders] = await Promise.all([
                 getDashboardStats(),
-                getRevenueData(new Date().getMonth() + 1, new Date().getFullYear()),
                 getTopCourses(5),
                 getRecentOrders(5)
             ]);
-
+            console.log(statsData);
             setStats(statsData);
-            setRevenueData(revenue);
             setTopCourses(courses);
             setRecentOrders(orders);
         } catch (error) {
             console.error('Error loading dashboard data:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const loadRevenueData = async () => {
+        try {
+            const data = await getRevenueData(revenuePeriod, new Date().getMonth() + 1, new Date().getFullYear());
+            setRevenueData(data);
+        } catch (error) {
+            console.error('Error loading revenue data:', error);
         }
     };
 
@@ -85,7 +98,11 @@ export default function Dashboard() {
             {/* Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 h-[400px]">
-                    <RevenueChart data={revenueData} />
+                    <RevenueChart
+                        data={revenueData}
+                        period={revenuePeriod}
+                        onPeriodChange={setRevenuePeriod}
+                    />
                 </div>
                 <div className="lg:col-span-1 h-[400px]">
                     <TopSellingCourses courses={topCourses} />

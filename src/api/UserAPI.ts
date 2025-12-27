@@ -1,4 +1,5 @@
 import React from "react";
+import { API_BASE_URL } from "../config/config";
 import { UserModel } from "../model/UserModel";
 import { getAuthHeaders } from "./apiHelper";
 
@@ -60,12 +61,12 @@ export async function getAllUser(
   page: number = 0,
   size: number = 5
 ): Promise<ResultInterface> {
-  const url: string = `http://localhost:8080/api/users?page=${page}&size=${size}`;
+  const url: string = `${API_BASE_URL}/api/users?page=${page}&size=${size}`;
   return getUsers(url);
 }
 
 export async function createUser(userData: Partial<UserModel>) {
-  const url = "http://localhost:8080/api/users";
+  const url = `${API_BASE_URL}/api/users`;
 
   // build payload explicitly so bạn biết đang gửi gì
   const payload = userData;
@@ -113,7 +114,7 @@ export async function createUser(userData: Partial<UserModel>) {
 }
 
 export async function updateUser(id: number, userData: Partial<UserModel>) {
-  const url: string = `http://localhost:8080/api/users/${id}`;
+  const url: string = `${API_BASE_URL}/api/users/${id}`;
   const payload = userData;
 
   try {
@@ -153,7 +154,7 @@ export async function updateUser(id: number, userData: Partial<UserModel>) {
 }
 
 export async function deleteUser(id: number): Promise<void> {
-  const url = `http://localhost:8080/api/users/${id}`;
+  const url = `${API_BASE_URL}/api/users/${id}`;
   try {
     const response = await fetch(url, {
       method: "DELETE",
@@ -172,7 +173,7 @@ export async function deleteUser(id: number): Promise<void> {
 
 
 export async function getCurrentUser(): Promise<UserModel> {
-  const url = `http://localhost:8080/api/users/me`;
+  const url = `${API_BASE_URL}/api/users/me`;
   const response = await fetch(url, {
     method: "GET",
     headers: getAuthHeaders(),

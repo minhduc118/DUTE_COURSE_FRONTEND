@@ -1,7 +1,8 @@
+import { API_BASE_URL } from "../config/config";
 import { authFetch } from "./apiHelper";
 import { NotificationResponse } from "../model/NotificationModel";
 
-const BASE_URL = "http://localhost:8080/api/notifications";
+const BASE_URL = `${API_BASE_URL}/api/notifications`;
 
 const NotificationAPI = {
     getMyNotifications: async (): Promise<NotificationResponse[]> => {

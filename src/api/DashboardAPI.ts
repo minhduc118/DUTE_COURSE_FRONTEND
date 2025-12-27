@@ -1,3 +1,6 @@
+import { API_BASE_URL } from '../config/config';
+import { authFetch } from './apiHelper';
+
 export interface DashboardStats {
     totalRevenue: number;
     revenueChange: number; // percentage
@@ -6,10 +9,14 @@ export interface DashboardStats {
     newOrders: number;
     ordersChange: number;
     activeCourses: number;
+    coursesChange: number;
 }
 
+export type RevenuePeriod = 'MONTH' | 'YEAR' | 'ALL_TIME';
+
 export interface RevenueData {
-    day: number;
+    label: string;
+    date: string;
     revenue: number;
     [key: string]: any; // Index signature for Recharts compatibility
 }
@@ -31,63 +38,45 @@ export interface DashboardOrder {
     createdAt: string;
 }
 
-const BASE_URL = 'http://localhost:8080/api/dashboard';
+const BASE_URL = `${API_BASE_URL}/api/dash-board`;
 
-// Mock data for now - replace with real API calls later
 export async function getDashboardStats(): Promise<DashboardStats> {
-    // TODO: Replace with real API call
-    return {
-        totalRevenue: 150000000,
-        revenueChange: 15,
-        newStudents: 234,
-        studentsChange: 8,
-        newOrders: 45,
-        ordersChange: 12,
-        activeCourses: 12
-    };
+    const response = await authFetch(`${BASE_URL}/stats`);
+    if (!response.ok) {
+        throw new Error('Failed to fetch dashboard stats');
+    }
+    return response.json();
 }
 
-export async function getRevenueData(month: number, year: number): Promise<RevenueData[]> {
-    // TODO: Replace with real API call
-    const mockData: RevenueData[] = [];
-    for (let i = 1; i <= 30; i++) {
-        mockData.push({
-            day: i,
-            revenue: Math.floor(Math.random() * 10000000) + 2000000
-        });
+export async function getRevenueData(
+    period: RevenuePeriod,
+    month?: number,
+    year?: number
+): Promise<RevenueData[]> {
+    const params = new URLSearchParams();
+    params.append('period', period);
+    if (month) params.append('month', month.toString());
+    if (year) params.append('year', year.toString());
+
+    const response = await authFetch(`${BASE_URL}/revenue?${params.toString()}`);
+    if (!response.ok) {
+        throw new Error('Failed to fetch revenue data');
     }
-    return mockData;
+    return response.json();
 }
 
 export async function getTopCourses(limit: number = 5): Promise<TopCourse[]> {
-    // TODO: Replace with real API call
-    return [
-        { courseId: 1, courseName: 'React Nâng Cao', revenue: 45000000, percentage: 30 },
-        { courseId: 2, courseName: 'Node.js Backend', revenue: 35000000, percentage: 23 },
-        { courseId: 3, courseName: 'TypeScript Cơ Bản', revenue: 28000000, percentage: 19 },
-        { courseId: 4, courseName: 'Spring Boot', revenue: 22000000, percentage: 15 },
-        { courseId: 5, courseName: 'MongoDB', revenue: 20000000, percentage: 13 }
-    ];
+    const response = await authFetch(`${BASE_URL}/top-courses?limit=${limit}`);
+    if (!response.ok) {
+        throw new Error('Failed to fetch top courses');
+    }
+    return response.json();
 }
 
 export async function getRecentOrders(limit: number = 10): Promise<DashboardOrder[]> {
-    // TODO: Replace with real API call
-    return [
-        {
-            orderId: 'ORD001',
-            customerName: 'Nguyễn Văn A',
-            courseName: 'React Nâng Cao',
-            amount: 1500000,
-            status: 'PAID',
-            createdAt: new Date().toISOString()
-        },
-        {
-            orderId: 'ORD002',
-            customerName: 'Trần Thị B',
-            courseName: 'Node.js Backend',
-            amount: 1200000,
-            status: 'PENDING',
-            createdAt: new Date(Date.now() - 3600000).toISOString()
-        }
-    ];
+    const response = await authFetch(`${BASE_URL}/recent-orders?limit=${limit}`);
+    if (!response.ok) {
+        throw new Error('Failed to fetch recent orders');
+    }
+    return response.json();
 }

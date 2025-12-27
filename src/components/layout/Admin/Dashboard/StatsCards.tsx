@@ -29,7 +29,7 @@ export default function StatsCards({ stats }: StatsCardsProps) {
             title: 'Active Courses',
             value: stats.activeCourses,
             icon: 'menu_book',
-            change: 5, // Mock change for now as API might not have it
+            change: stats.coursesChange,
             colorClass: 'text-purple-600 bg-purple-50',
             trend: 'new this month'
         },
